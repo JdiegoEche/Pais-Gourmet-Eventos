@@ -57,7 +57,12 @@ EVENT_SLUG=
 Estos pasos no los puede hacer un agente porque requieren login interactivo o acceso a servicios externos:
 
 1. **Sanity**: `npx sanity login` y `npx sanity init` para crear el proyecto y el dataset. Definir el schema para `event`, `restaurant` y `review` según `src/types/index.ts`.
-2. **Cloudflare R2**: crear el bucket para las fotos de los restaurantes y configurar el dominio público/CDN.
+2. **Cloudflare R2** (elegido en vez del asset CDN nativo de Sanity: con el tráfico esperado del evento más grande, el egress de Sanity sale mucho más caro que R2, que no cobra egress):
+   - Crear el bucket (ej. `pais-gourmet-fotos`) en el dashboard de Cloudflare → R2.
+   - Activar el dominio público del bucket (o conectar un subdominio propio) para poder servir las fotos.
+   - Crear un API token con permiso de lectura/escritura sobre ese bucket (R2 → Manage API tokens).
+   - Guardar y pasar: Account ID, Access Key ID, Secret Access Key, nombre del bucket y URL pública del bucket.
+   - Con esto y con Sanity ya inicializado (paso 1), falta construir un "custom asset source" en el Studio que suba las fotos directo a este bucket. Sanity soporta esto sin cambiar el tipo `image` de los campos existentes (`gallery`, `logo`, íconos de menú, banners): el asset source devuelve `kind: 'url'` en vez de subir el archivo al storage propio de Sanity.
 3. **Cloudflare Pages**: crear 7 proyectos (uno por evento), conectar cada dominio propio, y setear el `EVENT_SLUG` correspondiente en cada uno.
 4. **Anti-spam de reseñas**: decidir e implementar la protección (recomendado: Cloudflare Turnstile) — deliberadamente pendiente, las reseñas hoy se publican sin moderación ni captcha.
 5. **Webhook de Sanity → deploy hook de Cloudflare Pages**: como el sitio es estático (SSG), publicar/despublicar contenido en Sanity Studio no actualiza el sitio en vivo por sí solo — hace falta un rebuild. Configurar un webhook en Sanity (Settings → API → Webhooks) que dispare el deploy hook del proyecto de Cloudflare Pages correspondiente a cada evento, para que los cambios (por ejemplo, "bajar" un restaurante despublicándolo) se reflejen automáticamente sin intervención manual.
