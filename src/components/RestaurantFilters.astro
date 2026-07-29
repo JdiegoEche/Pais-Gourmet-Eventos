@@ -105,4 +105,14 @@ const { cuisineTypes, zones } = Astro.props;
     form?.querySelectorAll<HTMLInputElement>('input[type="checkbox"]').forEach((el) => (el.checked = false));
     applyFilters();
   });
+
+  const params = new URLSearchParams(window.location.search);
+  const zoneParam = params.get('zone');
+  if (zoneParam && form) {
+    const zoneCheckbox = form.querySelector<HTMLInputElement>(`input[name="zone"][value="${CSS.escape(zoneParam)}"]`);
+    if (zoneCheckbox) {
+      zoneCheckbox.checked = true;
+      applyFilters();
+    }
+  }
 </script>

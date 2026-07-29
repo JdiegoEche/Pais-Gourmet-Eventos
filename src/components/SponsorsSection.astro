@@ -1,0 +1,40 @@
+---
+interface Props {
+  sponsors: { name: string; imageUrl: string }[];
+}
+
+const { sponsors } = Astro.props;
+---
+
+{sponsors.length > 0 && (
+  <section class="sponsors">
+    <h2>Organiza y patrocina</h2>
+    <div class="sponsors__grid">
+      {sponsors.map((sponsor) => (
+        <img src={sponsor.imageUrl} alt={sponsor.name} loading="lazy" />
+      ))}
+    </div>
+  </section>
+)}
+
+<style>
+  .sponsors {
+    padding: var(--spacing-lg) var(--spacing-md);
+    text-align: center;
+  }
+  .sponsors h2 {
+    color: var(--color-primary-dark);
+    margin-bottom: var(--spacing-md);
+  }
+  .sponsors__grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+    align-items: center;
+    justify-content: center;
+  }
+  .sponsors__grid img {
+    max-height: 60px;
+    object-fit: contain;
+  }
+</style>

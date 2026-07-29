@@ -2,10 +2,20 @@
 import Layout from '../layouts/Layout.astro';
 import EventHero from '../components/EventHero.astro';
 import RestaurantCard from '../components/RestaurantCard.astro';
-import { getEvent, getFeaturedRestaurants } from '../lib/data';
+import RestaurantLogoStrip from '../components/RestaurantLogoStrip.astro';
+import WhatIncludesShowcase from '../components/WhatIncludesShowcase.astro';
+import WeeklyRecommended from '../components/WeeklyRecommended.astro';
+import PriceMosaic from '../components/PriceMosaic.astro';
+import ZoneMosaic from '../components/ZoneMosaic.astro';
+import RotatingBanner from '../components/RotatingBanner.astro';
+import SignupForm from '../components/SignupForm.astro';
+import SponsorsSection from '../components/SponsorsSection.astro';
+import { getEvent, getFeaturedRestaurants, getAllRestaurants, getWeeklyRecommendedRestaurants } from '../lib/data';
 
 const event = await getEvent();
 const featuredRestaurants = await getFeaturedRestaurants();
+const allRestaurants = await getAllRestaurants();
+const weeklyRecommended = await getWeeklyRecommendedRestaurants();
 ---
 
 <Layout title={event?.name ?? 'País Gourmet'}>
@@ -16,6 +26,14 @@ const featuredRestaurants = await getFeaturedRestaurants();
       {featuredRestaurants.map((restaurant) => <RestaurantCard restaurant={restaurant} />)}
     </div>
   </section>
+  <RestaurantLogoStrip restaurants={allRestaurants} />
+  {event && <WhatIncludesShowcase imageUrl={event.whatIncludesImage} />}
+  <WeeklyRecommended restaurants={weeklyRecommended} />
+  {event && <PriceMosaic priceRanges={event.priceRanges} />}
+  {event && <ZoneMosaic zones={event.zoneShowcase} />}
+  {event && <RotatingBanner images={event.banners} />}
+  <SignupForm />
+  {event && <SponsorsSection sponsors={event.sponsorLogos} />}
 </Layout>
 
 <style>

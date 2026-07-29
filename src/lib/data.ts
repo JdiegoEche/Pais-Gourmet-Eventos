@@ -48,6 +48,12 @@ export async function getFeaturedRestaurants(): Promise<Restaurant[]> {
   return (await restaurantRepository()).getFeatured(event?.featuredRestaurantSlugs ?? []);
 }
 
+export async function getWeeklyRecommendedRestaurants(): Promise<Restaurant[]> {
+  const event = await getEvent();
+  if (!event?.weeklyRecommendedEnabled) return [];
+  return (await restaurantRepository()).getFeatured(event.weeklyRecommendedRestaurantSlugs ?? []);
+}
+
 export async function getAllRestaurants(): Promise<Restaurant[]> {
   return (await restaurantRepository()).getAll();
 }
