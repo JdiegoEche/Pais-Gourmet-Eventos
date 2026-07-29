@@ -1,4 +1,4 @@
-import type { EventData, Restaurant, Review } from '../../types';
+import type { EventData, Restaurant, Review, LeadSignup } from '../../types';
 
 export interface EventRepository {
   getEvent(): Promise<EventData | null>;
@@ -15,4 +15,10 @@ export type CreateReviewInput = Omit<Review, 'createdAt'>;
 export interface ReviewRepository {
   getByRestaurant(restaurantSlug: string): Promise<Review[]>;
   create(input: CreateReviewInput): Promise<Review>;
+}
+
+export type CreateLeadSignupInput = Omit<LeadSignup, 'createdAt'>;
+
+export interface LeadSignupRepository {
+  create(input: CreateLeadSignupInput): Promise<LeadSignup>;
 }

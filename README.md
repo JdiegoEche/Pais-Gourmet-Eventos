@@ -48,7 +48,7 @@ Necesitás un archivo `.env` (no versionado) con estas variables — el agente n
 ```
 SANITY_PROJECT_ID=
 SANITY_DATASET=
-SANITY_REVIEW_TOKEN=
+SANITY_WRITE_TOKEN=
 EVENT_SLUG=
 ```
 

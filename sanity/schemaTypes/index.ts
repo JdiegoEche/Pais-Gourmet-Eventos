@@ -1,4 +1,5 @@
 import event from './event'
+import leadSignup from './leadSignup'
 import restaurant from './restaurant'
 import review from './review'
 import features from './objects/features'
@@ -13,6 +14,7 @@ export const schemaTypes = [
   event,
   restaurant,
   review,
+  leadSignup,
   // objects
   menu,
   menuItem,

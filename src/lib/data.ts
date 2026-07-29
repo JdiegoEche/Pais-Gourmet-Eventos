@@ -1,5 +1,5 @@
 import type { EventData, Restaurant, Review } from '../types';
-import type { CreateReviewInput } from './repositories/ports';
+import type { CreateReviewInput, CreateLeadSignupInput } from './repositories/ports';
 
 const useMock = !import.meta.env.SANITY_PROJECT_ID;
 
@@ -30,6 +30,15 @@ async function reviewRepository() {
   return new SanityReviewRepository();
 }
 
+async function leadSignupRepository() {
+  if (useMock) {
+    const { MockLeadSignupRepository } = await import('./repositories/mock/MockLeadSignupRepository');
+    return new MockLeadSignupRepository();
+  }
+  const { SanityLeadSignupRepository } = await import('./repositories/sanity/SanityLeadSignupRepository');
+  return new SanityLeadSignupRepository();
+}
+
 export async function getEvent(): Promise<EventData | null> {
   return (await eventRepository()).getEvent();
 }
@@ -51,8 +60,12 @@ export async function getReviews(restaurantSlug: string): Promise<Review[]> {
   return (await reviewRepository()).getByRestaurant(restaurantSlug);
 }
 
-export type { CreateReviewInput };
+export type { CreateReviewInput, CreateLeadSignupInput };
 
 export async function createReview(input: CreateReviewInput): Promise<Review> {
   return (await reviewRepository()).create(input);
+}
+
+export async function createLeadSignup(input: CreateLeadSignupInput) {
+  return (await leadSignupRepository()).create(input);
 }

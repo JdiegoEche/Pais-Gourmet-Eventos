@@ -1,0 +1,51 @@
+import type { APIRoute } from 'astro';
+import { createLeadSignup } from '../../lib/data';
+
+export const prerender = false;
+
+const MAX_NAME_LENGTH = 100;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_PATTERN = /^[0-9+\s()-]{7,20}$/;
+
+export const POST: APIRoute = async ({ request, url }) => {
+  const origin = request.headers.get('origin');
+  if (origin && origin !== url.origin) {
+    return new Response(JSON.stringify({ error: 'Origen no permitido' }), { status: 403 });
+  }
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return new Response(JSON.stringify({ error: 'JSON inválido' }), { status: 400 });
+  }
+
+  if (typeof body !== 'object' || body === null) {
+    return new Response(JSON.stringify({ error: 'Datos inválidos' }), { status: 400 });
+  }
+
+  const { name, email, phone } = body as Record<string, unknown>;
+
+  if (
+    typeof name !== 'string' ||
+    !name.trim() ||
+    name.trim().length > MAX_NAME_LENGTH ||
+    typeof email !== 'string' ||
+    !EMAIL_PATTERN.test(email.trim()) ||
+    typeof phone !== 'string' ||
+    !PHONE_PATTERN.test(phone.trim())
+  ) {
+    return new Response(JSON.stringify({ error: 'Datos inválidos' }), { status: 400 });
+  }
+
+  try {
+    await createLeadSignup({
+      name: name.trim(),
+      email: email.trim(),
+      phone: phone.trim(),
+    });
+    return new Response(JSON.stringify({ ok: true }), { status: 201 });
+  } catch {
+    return new Response(JSON.stringify({ error: 'No se pudo procesar la inscripción' }), { status: 500 });
+  }
+};

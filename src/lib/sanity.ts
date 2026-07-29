@@ -17,7 +17,7 @@ export function getSanityWriteClient() {
     projectId,
     dataset,
     apiVersion: '2024-01-01',
-    token: import.meta.env.SANITY_REVIEW_TOKEN,
+    token: import.meta.env.SANITY_WRITE_TOKEN,
     useCdn: false,
   });
 }
