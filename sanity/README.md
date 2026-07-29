@@ -10,7 +10,7 @@ Esta carpeta contiene las definiciones de schema (`schemaTypes/`) listas para co
 
 ## Objetos reutilizables
 
-`menu`, `menuItem`, `weeklyHours`, `features`, `sponsorLogo` — usados como campos embebidos dentro de `event`/`restaurant`.
+`menu`, `menuItem`, `menuHighlight`, `features`, `sponsorLogo` — usados como campos embebidos dentro de `event`/`restaurant`.
 
 ## Cómo conectarlo cuando se haga `sanity init`
 

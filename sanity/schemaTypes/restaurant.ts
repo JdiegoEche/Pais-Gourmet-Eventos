@@ -71,8 +71,9 @@ export default defineType({
     defineField({
       name: 'hours',
       title: 'Horarios',
-      type: 'array',
-      of: [defineArrayMember({type: 'weeklyHours'})],
+      description: 'Texto libre tal cual lo escribe el restaurante, ej. "Lunes a viernes de 3:30pm a 10pm".',
+      type: 'text',
+      rows: 4,
     }),
     defineField({
       name: 'menus',

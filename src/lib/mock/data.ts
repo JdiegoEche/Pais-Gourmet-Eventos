@@ -29,15 +29,6 @@ export const mockEvent: EventData = {
   ],
 };
 
-const standardHours = [
-  { day: 'martes', opens: '12:00', closes: '21:00' },
-  { day: 'miercoles', opens: '12:00', closes: '21:00' },
-  { day: 'jueves', opens: '12:00', closes: '22:00' },
-  { day: 'viernes', opens: '12:00', closes: '23:00' },
-  { day: 'sabado', opens: '12:00', closes: '23:00' },
-  { day: 'domingo', opens: '12:00', closes: '20:00' },
-] as const;
-
 function gallery(slug: string, count: number): string[] {
   return Array.from({ length: count }, (_, i) => `https://picsum.photos/seed/${slug}-${i + 1}/800/600`);
 }
@@ -54,7 +45,7 @@ export const mockRestaurants: Restaurant[] = [
     phone: '3104567890',
     whatsapp: '573104567890',
     instagram: 'latulpafuegoycafe',
-    hours: [...standardHours],
+    hours: '- Martes a viernes de 12:00 m a 9:00 pm\n\n- Sábado y domingo de 12:00 m a 11:00 pm',
     menus: [
       {
         name: 'Menú Tulpa',
@@ -82,9 +73,9 @@ export const mockRestaurants: Restaurant[] = [
     zone: 'Pereira',
     address: 'Avenida Circunvalar # 5-21, Pereira, Risaralda',
     phone: '3117654321',
-    whatsapp: '573117654321',
+    whatsapp: 'https://wa.link/trattoriagirasol',
     instagram: 'trattoriagirasol',
-    hours: [...standardHours],
+    hours: '- Todos los días de 12:00 m a 10:00 pm\n\n- Viernes y sábado hasta las 11:30 pm',
     menus: [
       {
         name: 'Menú Toscana',
@@ -122,7 +113,7 @@ export const mockRestaurants: Restaurant[] = [
     address: 'Carrera 23 # 62-18, Manizales, Caldas',
     phone: '3129988776',
     instagram: 'sazondeleje',
-    hours: [{ day: 'lunes', opens: '12:00', closes: '20:00' }, ...standardHours],
+    hours: '- Lunes a viernes de 12:00 m a 8:00 pm\n\n- Sábado y domingo de 12:00 m a 8:00 pm',
     menus: [
       {
         name: 'Menú Cafetero',
@@ -150,9 +141,9 @@ export const mockRestaurants: Restaurant[] = [
     zone: 'Armenia',
     address: 'Calle 21 # 18-45, Armenia, Quindío',
     phone: '3001122334',
-    whatsapp: '573001122334',
+    whatsapp: 'https://wa.link/umamiramenbar',
     instagram: 'umamiramenbar',
-    hours: [...standardHours],
+    hours: '- Martes a domingo de 12:00 m a 10:00 pm\n\n- Lunes cerrado',
     menus: [
       {
         name: 'Menú Umami',
@@ -182,7 +173,7 @@ export const mockRestaurants: Restaurant[] = [
     phone: '3145566778',
     whatsapp: '573145566778',
     instagram: 'elfogoncriollo',
-    hours: [...standardHours],
+    hours: '- Todos los días de 12:00 m a 11:00 pm',
     menus: [
       {
         name: 'Menú Parrillero',
@@ -211,7 +202,7 @@ export const mockRestaurants: Restaurant[] = [
     address: 'Carrera 19 # 27-40, Manizales, Caldas',
     phone: '3167788990',
     instagram: 'verdeolivabistro',
-    hours: [...standardHours],
+    hours: '- Martes a jueves de 12:00 m a 9:00 pm\n\n- Viernes y sábado de 12:00 m a 11:00 pm\n\n- Domingo de 12:00 m a 6:00 pm',
     menus: [
       {
         name: 'Menú Mediterráneo',

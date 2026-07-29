@@ -47,12 +47,6 @@ export interface MenuHighlight {
   label: string;
 }
 
-export interface WeeklyHours {
-  day: 'lunes' | 'martes' | 'miercoles' | 'jueves' | 'viernes' | 'sabado' | 'domingo';
-  opens: string;
-  closes: string;
-}
-
 export interface Restaurant {
   slug: string;
   eventSlug: string;
@@ -64,7 +58,10 @@ export interface Restaurant {
   phone: string;
   whatsapp?: string;
   instagram?: string;
-  hours: WeeklyHours[];
+  // Texto libre tal cual lo escribe cada restaurante (ej. "Lunes a viernes de 3:30pm a 10pm").
+  // No estructurado por día: los datos de origen (formulario de inscripción) vienen en formatos
+  // demasiado variados para parsear de forma confiable.
+  hours: string;
   menus: Menu[];
   menuHighlights: MenuHighlight[];
   youtubeVideoUrl?: string;

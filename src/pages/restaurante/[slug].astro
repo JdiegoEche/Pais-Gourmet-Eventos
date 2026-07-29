@@ -24,17 +24,11 @@ const { restaurant } = Astro.props;
 const reviews = await getReviews(restaurant.slug);
 const relatedRestaurants = await getRelatedRestaurants(restaurant);
 
-const dayLabels: Record<string, string> = {
-  lunes: 'Lunes',
-  martes: 'Martes',
-  miercoles: 'Miércoles',
-  jueves: 'Jueves',
-  viernes: 'Viernes',
-  sabado: 'Sábado',
-  domingo: 'Domingo',
-};
-
 const menuCategories = ['entrantes', 'fuerte', 'postre'] as const;
+
+function whatsappLink(value: string): string {
+  return value.startsWith('http') ? value : `https://wa.me/${value}`;
+}
 
 function youtubeEmbedUrl(url?: string): string | null {
   if (!url) return null;
@@ -142,11 +136,7 @@ const videoEmbedUrl = youtubeEmbedUrl(restaurant.youtubeVideoUrl);
             <p><a href={`tel:${restaurant.phone}`}>{restaurant.phone}</a></p>
 
             <h3>Horarios</h3>
-            <ul class="restaurant-detail__hours">
-              {restaurant.hours.map((h) => (
-                <li>{dayLabels[h.day] ?? h.day}: {h.opens} – {h.closes}</li>
-              ))}
-            </ul>
+            <p class="restaurant-detail__hours">{restaurant.hours}</p>
           </div>
         </section>
 
@@ -179,7 +169,7 @@ const videoEmbedUrl = youtubeEmbedUrl(restaurant.youtubeVideoUrl);
         <div class="feature-item">
           <h3>Contacto</h3>
           {restaurant.whatsapp && (
-            <p><a href={`https://wa.me/${restaurant.whatsapp}`} target="_blank" rel="noopener">WhatsApp</a></p>
+            <p><a href={whatsappLink(restaurant.whatsapp)} target="_blank" rel="noopener">WhatsApp</a></p>
           )}
           {restaurant.instagram && (
             <p>
@@ -352,9 +342,8 @@ const videoEmbedUrl = youtubeEmbedUrl(restaurant.youtubeVideoUrl);
     font-size: 0.85rem;
   }
   .restaurant-detail__hours {
-    list-style: none;
-    padding: 0;
     color: var(--color-text-muted);
+    white-space: pre-line;
   }
   .menu-card {
     border: 1px solid var(--color-border);
