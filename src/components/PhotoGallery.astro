@@ -1,0 +1,102 @@
+---
+import { thumb } from '../lib/image';
+
+interface Props {
+  photos: string[];
+  alt: string;
+}
+
+const { photos, alt } = Astro.props;
+---
+
+<div class="photo-gallery">
+  {photos.map((src, index) => (
+    <button
+      type="button"
+      class="photo-gallery__item"
+      data-photo-trigger
+      data-src={src}
+      aria-label={`Ver foto ${index + 1} de ${alt}`}
+    >
+      <img src={thumb(src, 320)} alt={`${alt} — foto ${index + 1}`} loading="lazy" />
+    </button>
+  ))}
+</div>
+
+<dialog class="photo-gallery__dialog" data-photo-dialog>
+  <button type="button" class="photo-gallery__close" data-photo-close aria-label="Cerrar">✕</button>
+  <img data-photo-dialog-image alt="" />
+</dialog>
+
+<style>
+  .photo-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: var(--spacing-xs);
+  }
+  .photo-gallery__item {
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: var(--radius);
+  }
+  .photo-gallery__item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.2s ease;
+  }
+  .photo-gallery__item:hover img {
+    transform: scale(1.05);
+  }
+  .photo-gallery__dialog {
+    position: relative;
+    border: none;
+    border-radius: var(--radius);
+    padding: 0;
+    max-width: min(90vw, 900px);
+    max-height: 90vh;
+    background: transparent;
+  }
+  .photo-gallery__dialog::backdrop {
+    background: rgba(20, 14, 8, 0.75);
+  }
+  .photo-gallery__dialog img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .photo-gallery__close {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: var(--color-surface);
+    border: none;
+    border-radius: 50%;
+    width: 2rem;
+    height: 2rem;
+    cursor: pointer;
+  }
+</style>
+
+<script>
+  const dialog = document.querySelector<HTMLDialogElement>('[data-photo-dialog]');
+  const dialogImage = dialog?.querySelector<HTMLImageElement>('[data-photo-dialog-image]');
+
+  document.querySelectorAll<HTMLButtonElement>('[data-photo-trigger]').forEach((trigger) => {
+    trigger.addEventListener('click', () => {
+      if (!dialog || !dialogImage) return;
+      dialogImage.src = trigger.dataset.src ?? '';
+      dialog.showModal();
+    });
+  });
+
+  document.querySelector('[data-photo-close]')?.addEventListener('click', () => dialog?.close());
+  dialog?.addEventListener('click', (event) => {
+    if (event.target === dialog) dialog.close();
+  });
+</script>

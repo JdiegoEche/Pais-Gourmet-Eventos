@@ -1,0 +1,124 @@
+---
+interface Props {
+  restaurantSlug: string;
+}
+
+const { restaurantSlug } = Astro.props;
+---
+
+<form class="review-form" data-review-form data-restaurant-slug={restaurantSlug}>
+  <h3>Dejá tu reseña</h3>
+  <input type="text" name="name" placeholder="Tu nombre" required />
+  <label class="review-form__rating">
+    Calificación
+    <select name="rating" required>
+      <option value="5">5 — Excelente</option>
+      <option value="4">4 — Muy bueno</option>
+      <option value="3">3 — Bueno</option>
+      <option value="2">2 — Regular</option>
+      <option value="1">1 — Malo</option>
+    </select>
+  </label>
+  <textarea name="comment" placeholder="Contanos cómo fue tu experiencia" required></textarea>
+  <button type="submit">Publicar reseña</button>
+  <p class="review-form__status" data-review-status role="status"></p>
+</form>
+
+<style>
+  .review-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    max-width: 480px;
+    padding: var(--spacing-md);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+  }
+  .review-form h3 {
+    margin: 0 0 0.25rem;
+    color: var(--color-primary-dark);
+  }
+  .review-form input,
+  .review-form select,
+  .review-form textarea {
+    padding: 0.6rem;
+    border: 1px solid var(--color-border);
+    border-radius: calc(var(--radius) / 2);
+    font: inherit;
+  }
+  .review-form__rating {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+  }
+  .review-form textarea {
+    min-height: 6rem;
+    resize: vertical;
+  }
+  .review-form button[type='submit'] {
+    align-self: flex-start;
+    padding: 0.6rem 1.5rem;
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .review-form button[type='submit']:hover {
+    background: var(--color-primary-dark);
+  }
+  .review-form__status {
+    margin: 0;
+    font-size: 0.9rem;
+    min-height: 1.2em;
+  }
+  .review-form__status[data-state='success'] {
+    color: #2f7a3d;
+  }
+  .review-form__status[data-state='error'] {
+    color: #b3261e;
+  }
+</style>
+
+<script>
+  // Protección anti-spam (ej. Cloudflare Turnstile) pendiente de decisión del usuario.
+  const form = document.querySelector<HTMLFormElement>('[data-review-form]');
+  const status = form?.querySelector<HTMLParagraphElement>('[data-review-status]');
+
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const restaurantSlug = form.dataset.restaurantSlug;
+    const formData = new FormData(form);
+
+    try {
+      const response = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          restaurantSlug,
+          name: formData.get('name'),
+          rating: Number(formData.get('rating')),
+          comment: formData.get('comment'),
+        }),
+      });
+
+      if (!response.ok) throw new Error('request failed');
+
+      form.reset();
+      if (status) {
+        status.textContent = '¡Gracias por tu reseña!';
+        status.dataset.state = 'success';
+      }
+      document.dispatchEvent(new CustomEvent('review:created', { detail: { restaurantSlug } }));
+    } catch {
+      if (status) {
+        status.textContent = 'No pudimos publicar tu reseña. Intentá de nuevo.';
+        status.dataset.state = 'error';
+      }
+    }
+  });
+</script>

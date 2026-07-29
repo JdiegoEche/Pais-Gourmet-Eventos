@@ -1,0 +1,108 @@
+---
+interface Props {
+  cuisineTypes: string[];
+  zones: string[];
+}
+
+const { cuisineTypes, zones } = Astro.props;
+---
+
+<form class="restaurant-filters" data-filters>
+  <fieldset>
+    <legend>Tipo de comida</legend>
+    {cuisineTypes.map((type) => (
+      <label>
+        <input type="checkbox" name="cuisine" value={type} />
+        {type}
+      </label>
+    ))}
+  </fieldset>
+
+  <fieldset>
+    <legend>Zona</legend>
+    {zones.map((zone) => (
+      <label>
+        <input type="checkbox" name="zone" value={zone} />
+        {zone}
+      </label>
+    ))}
+  </fieldset>
+
+  <button type="button" data-filters-clear>Limpiar filtros</button>
+</form>
+
+<style>
+  .restaurant-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+    align-items: flex-end;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    margin-bottom: var(--spacing-md);
+  }
+  .restaurant-filters fieldset {
+    border: none;
+    padding: 0;
+    margin: 0;
+  }
+  .restaurant-filters legend {
+    font-weight: 700;
+    color: var(--color-primary-dark);
+    margin-bottom: 0.25rem;
+  }
+  .restaurant-filters label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-right: 0.75rem;
+    font-size: 0.9rem;
+    color: var(--color-text);
+  }
+  .restaurant-filters [data-filters-clear] {
+    background: none;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 0.4rem 0.9rem;
+    cursor: pointer;
+    color: var(--color-text-muted);
+  }
+</style>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('[data-filters]');
+  const grid = document.querySelector<HTMLElement>('[data-restaurant-grid]');
+  const counter = document.querySelector<HTMLElement>('[data-results-count]');
+  const cards = grid ? Array.from(grid.querySelectorAll<HTMLElement>('[data-restaurant-card]')) : [];
+
+  function applyFilters() {
+    if (!form) return;
+    const cuisines = Array.from(
+      form.querySelectorAll<HTMLInputElement>('input[name="cuisine"]:checked')
+    ).map((el) => el.value);
+    const zones = Array.from(form.querySelectorAll<HTMLInputElement>('input[name="zone"]:checked')).map(
+      (el) => el.value
+    );
+
+    let visible = 0;
+    cards.forEach((card) => {
+      const cardCuisines = card.dataset.cuisine?.split('|') ?? [];
+      const cardZone = card.dataset.zone ?? '';
+      const matchesCuisine = cuisines.length === 0 || cuisines.some((c) => cardCuisines.includes(c));
+      const matchesZone = zones.length === 0 || zones.includes(cardZone);
+      const show = matchesCuisine && matchesZone;
+      card.hidden = !show;
+      if (show) visible += 1;
+    });
+
+    if (counter) counter.textContent = String(visible);
+  }
+
+  form?.addEventListener('change', applyFilters);
+  document.querySelector('[data-filters-clear]')?.addEventListener('click', () => {
+    form?.querySelectorAll<HTMLInputElement>('input[type="checkbox"]').forEach((el) => (el.checked = false));
+    applyFilters();
+  });
+</script>

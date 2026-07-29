@@ -1,0 +1,105 @@
+---
+import type { Review } from '../types';
+
+interface Props {
+  restaurantSlug: string;
+  reviews: Review[];
+}
+
+const { restaurantSlug, reviews } = Astro.props;
+---
+
+<section class="review-list" data-review-list data-restaurant-slug={restaurantSlug}>
+  <h3>Reseñas ({reviews.length})</h3>
+  <ul data-review-list-items>
+    {reviews.map((review) => (
+      <li>
+        <div class="review-list__header">
+          <strong>{review.name}</strong>
+          <span class="review-list__rating">{'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}</span>
+        </div>
+        <p>{review.comment}</p>
+      </li>
+    ))}
+  </ul>
+  {reviews.length === 0 && <p data-review-empty>Todavía no hay reseñas. ¡Sé el primero!</p>}
+</section>
+
+<style>
+  .review-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+  .review-list li {
+    padding: var(--spacing-sm);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+  }
+  .review-list__header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.25rem;
+  }
+  .review-list__rating {
+    color: var(--color-accent);
+    letter-spacing: 0.1em;
+  }
+</style>
+
+<script>
+  interface ReviewDTO {
+    name: string;
+    rating: number;
+    comment: string;
+  }
+
+  const container = document.querySelector<HTMLElement>('[data-review-list]');
+  const list = container?.querySelector<HTMLUListElement>('[data-review-list-items]');
+  const restaurantSlug = container?.dataset.restaurantSlug;
+
+  function escapeHtml(value: string) {
+    const div = document.createElement('div');
+    div.textContent = value;
+    return div.innerHTML;
+  }
+
+  function renderReviews(reviews: ReviewDTO[]) {
+    if (!list || !container) return;
+    const heading = container.querySelector('h3');
+    if (heading) heading.textContent = `Reseñas (${reviews.length})`;
+
+    list.innerHTML = reviews
+      .map(
+        (review) => `
+          <li>
+            <div class="review-list__header">
+              <strong>${escapeHtml(review.name)}</strong>
+              <span class="review-list__rating">${'★'.repeat(review.rating)}${'☆'.repeat(5 - review.rating)}</span>
+            </div>
+            <p>${escapeHtml(review.comment)}</p>
+          </li>
+        `
+      )
+      .join('');
+  }
+
+  async function refresh() {
+    if (!restaurantSlug) return;
+    const response = await fetch(`/api/reviews?restaurant=${encodeURIComponent(restaurantSlug)}`);
+    if (!response.ok) return;
+    const reviews = (await response.json()) as ReviewDTO[];
+    renderReviews(reviews);
+  }
+
+  document.addEventListener('review:created', (event) => {
+    const detail = (event as CustomEvent<{ restaurantSlug: string }>).detail;
+    if (detail?.restaurantSlug === restaurantSlug) refresh();
+  });
+
+  refresh();
+</script>

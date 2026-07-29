@@ -1,0 +1,217 @@
+import type { EventData, Restaurant, Review } from '../../types';
+
+export const mockEvent: EventData = {
+  slug: 'pais-gourmet-demo',
+  name: 'País Gourmet Demo',
+  startDate: '2026-08-01',
+  endDate: '2026-08-31',
+  whatIncludes:
+    'Un mes de menús exclusivos a precio fijo en los mejores restaurantes del Eje Cafetero, pensados para compartir en pareja o en grupo.',
+  priceRanges: ['$45.000 - $65.000', '$65.000 - $85.000', '$85.000 - $110.000'],
+  zones: ['Armenia', 'Pereira', 'Manizales'],
+  featuredRestaurantSlugs: ['la-tulpa-fuego-y-cafe', 'umami-ramen-bar', 'el-fogon-criollo'],
+  sponsorLogos: [
+    { name: 'Cámara de Comercio del Eje', imageUrl: 'https://picsum.photos/seed/sponsor-1/200/80' },
+    { name: 'Turismo Eje Cafetero', imageUrl: 'https://picsum.photos/seed/sponsor-2/200/80' },
+  ],
+};
+
+const standardHours = [
+  { day: 'martes', opens: '12:00', closes: '21:00' },
+  { day: 'miercoles', opens: '12:00', closes: '21:00' },
+  { day: 'jueves', opens: '12:00', closes: '22:00' },
+  { day: 'viernes', opens: '12:00', closes: '23:00' },
+  { day: 'sabado', opens: '12:00', closes: '23:00' },
+  { day: 'domingo', opens: '12:00', closes: '20:00' },
+] as const;
+
+function gallery(slug: string, count: number): string[] {
+  return Array.from({ length: count }, (_, i) => `https://picsum.photos/seed/${slug}-${i + 1}/800/600`);
+}
+
+export const mockRestaurants: Restaurant[] = [
+  {
+    slug: 'la-tulpa-fuego-y-cafe',
+    eventSlug: 'pais-gourmet-demo',
+    name: 'La Tulpa Fuego y Café',
+    cuisineTypes: ['Colombiana', 'Fusión'],
+    zone: 'Armenia',
+    address: 'Calle 10 # 14-32, Armenia, Quindío',
+    phone: '3104567890',
+    whatsapp: '573104567890',
+    instagram: 'latulpafuegoycafe',
+    hours: [...standardHours],
+    menus: [
+      {
+        name: 'Menú Tulpa',
+        currentPrice: 85000,
+        previousPrice: 105000,
+        items: [
+          { name: 'Patacón con hogao y queso', category: 'entrantes' },
+          { name: 'Sancocho de gallina criolla', category: 'fuerte' },
+          { name: 'Torta de natas', description: 'con café de la finca', category: 'postre' },
+        ],
+      },
+    ],
+    features: { petFriendly: true, delivery: true, tableService: true, paymentMethods: ['Efectivo', 'Tarjeta', 'Nequi'] },
+    gallery: gallery('la-tulpa-fuego-y-cafe', 5),
+    relatedRestaurantSlugs: ['sazon-del-eje', 'el-fogon-criollo'],
+  },
+  {
+    slug: 'trattoria-girasol',
+    eventSlug: 'pais-gourmet-demo',
+    name: 'Trattoria Girasol',
+    cuisineTypes: ['Italiana'],
+    zone: 'Pereira',
+    address: 'Avenida Circunvalar # 5-21, Pereira, Risaralda',
+    phone: '3117654321',
+    whatsapp: '573117654321',
+    instagram: 'trattoriagirasol',
+    hours: [...standardHours],
+    menus: [
+      {
+        name: 'Menú Toscana',
+        currentPrice: 95000,
+        previousPrice: 120000,
+        items: [
+          { name: 'Bruschetta de tomate y albahaca', category: 'entrantes' },
+          { name: 'Risotto de hongos porcini', category: 'fuerte' },
+          { name: 'Tiramisú de la casa', category: 'postre' },
+        ],
+      },
+      {
+        name: 'Menú Sorrento',
+        currentPrice: 65000,
+        items: [
+          { name: 'Carpaccio de zucchini', category: 'entrantes' },
+          { name: 'Pappardelle al pesto', category: 'fuerte' },
+          { name: 'Panna cotta de maracuyá', category: 'postre' },
+        ],
+      },
+    ],
+    features: { petFriendly: false, delivery: true, tableService: true, paymentMethods: ['Tarjeta', 'Efectivo'] },
+    gallery: gallery('trattoria-girasol', 6),
+    relatedRestaurantSlugs: ['verde-oliva-bistro'],
+  },
+  {
+    slug: 'sazon-del-eje',
+    eventSlug: 'pais-gourmet-demo',
+    name: 'Sazón del Eje',
+    cuisineTypes: ['Colombiana'],
+    zone: 'Manizales',
+    address: 'Carrera 23 # 62-18, Manizales, Caldas',
+    phone: '3129988776',
+    instagram: 'sazondeleje',
+    hours: [{ day: 'lunes', opens: '12:00', closes: '20:00' }, ...standardHours],
+    menus: [
+      {
+        name: 'Menú Cafetero',
+        currentPrice: 65000,
+        previousPrice: 78000,
+        items: [
+          { name: 'Arepa de choclo con quesillo', category: 'entrantes' },
+          { name: 'Frijolada paisa', category: 'fuerte' },
+          { name: 'Obleas con arequipe', category: 'postre' },
+        ],
+      },
+    ],
+    features: { petFriendly: true, delivery: false, tableService: true, paymentMethods: ['Efectivo'] },
+    gallery: gallery('sazon-del-eje', 4),
+    relatedRestaurantSlugs: ['la-tulpa-fuego-y-cafe'],
+  },
+  {
+    slug: 'umami-ramen-bar',
+    eventSlug: 'pais-gourmet-demo',
+    name: 'Umami Ramen Bar',
+    cuisineTypes: ['Asiática', 'Fusión'],
+    zone: 'Armenia',
+    address: 'Calle 21 # 18-45, Armenia, Quindío',
+    phone: '3001122334',
+    whatsapp: '573001122334',
+    instagram: 'umamiramenbar',
+    hours: [...standardHours],
+    menus: [
+      {
+        name: 'Menú Umami',
+        currentPrice: 89000,
+        previousPrice: 110000,
+        items: [
+          { name: 'Gyozas de cerdo', category: 'entrantes' },
+          { name: 'Ramen tonkotsu', category: 'fuerte' },
+          { name: 'Mochi de té verde', category: 'postre' },
+        ],
+      },
+    ],
+    features: { petFriendly: false, delivery: true, tableService: true, paymentMethods: ['Tarjeta', 'Nequi'] },
+    gallery: gallery('umami-ramen-bar', 5),
+    relatedRestaurantSlugs: ['trattoria-girasol', 'verde-oliva-bistro'],
+  },
+  {
+    slug: 'el-fogon-criollo',
+    eventSlug: 'pais-gourmet-demo',
+    name: 'El Fogón Criollo',
+    cuisineTypes: ['Colombiana', 'Parrilla'],
+    zone: 'Pereira',
+    address: 'Calle 14 # 22-08, Pereira, Risaralda',
+    phone: '3145566778',
+    whatsapp: '573145566778',
+    instagram: 'elfogoncriollo',
+    hours: [...standardHours],
+    menus: [
+      {
+        name: 'Menú Parrillero',
+        currentPrice: 98000,
+        previousPrice: 125000,
+        items: [
+          { name: 'Chicharrón con arepa', category: 'entrantes' },
+          { name: 'Bandeja paisa completa', category: 'fuerte' },
+          { name: 'Brevas con arequipe', category: 'postre' },
+        ],
+      },
+    ],
+    features: { petFriendly: true, delivery: true, tableService: true, paymentMethods: ['Efectivo', 'Tarjeta'] },
+    gallery: gallery('el-fogon-criollo', 6),
+    relatedRestaurantSlugs: ['la-tulpa-fuego-y-cafe', 'sazon-del-eje'],
+  },
+  {
+    slug: 'verde-oliva-bistro',
+    eventSlug: 'pais-gourmet-demo',
+    name: 'Verde Oliva Bistró',
+    cuisineTypes: ['Mediterránea'],
+    zone: 'Manizales',
+    address: 'Carrera 19 # 27-40, Manizales, Caldas',
+    phone: '3167788990',
+    instagram: 'verdeolivabistro',
+    hours: [...standardHours],
+    menus: [
+      {
+        name: 'Menú Mediterráneo',
+        currentPrice: 92000,
+        previousPrice: 115000,
+        items: [
+          { name: 'Hummus con pan pita', category: 'entrantes' },
+          { name: 'Cordero a la griega', category: 'fuerte' },
+          { name: 'Baklava', category: 'postre' },
+        ],
+      },
+    ],
+    features: { petFriendly: false, delivery: false, tableService: true, paymentMethods: ['Tarjeta'] },
+    gallery: gallery('verde-oliva-bistro', 4),
+    relatedRestaurantSlugs: ['trattoria-girasol', 'umami-ramen-bar'],
+  },
+];
+
+export const mockReviewsSeed: Review[] = [
+  { restaurantSlug: 'la-tulpa-fuego-y-cafe', name: 'Camila R.', rating: 5, comment: 'El sancocho estaba espectacular, muy buena atención.', createdAt: '2026-07-10T18:30:00.000Z' },
+  { restaurantSlug: 'la-tulpa-fuego-y-cafe', name: 'Julián M.', rating: 4, comment: 'Rico ambiente, aunque tardaron un poco con el postre.', createdAt: '2026-07-15T20:00:00.000Z' },
+  { restaurantSlug: 'trattoria-girasol', name: 'Sofía T.', rating: 5, comment: 'El risotto de hongos es el mejor que probé en la ciudad.', createdAt: '2026-07-08T19:15:00.000Z' },
+  { restaurantSlug: 'trattoria-girasol', name: 'Andrés P.', rating: 4, comment: 'Muy buena relación precio-calidad en el menú Sorrento.', createdAt: '2026-07-18T21:00:00.000Z' },
+  { restaurantSlug: 'sazon-del-eje', name: 'Laura G.', rating: 5, comment: 'Sabor casero de verdad, se siente el cariño en la comida.', createdAt: '2026-07-05T13:00:00.000Z' },
+  { restaurantSlug: 'sazon-del-eje', name: 'Diego F.', rating: 3, comment: 'Buena comida, el local es un poco pequeño para grupos grandes.', createdAt: '2026-07-20T14:30:00.000Z' },
+  { restaurantSlug: 'umami-ramen-bar', name: 'Valentina S.', rating: 5, comment: 'El ramen tonkotsu tiene un caldo increíble.', createdAt: '2026-07-12T20:45:00.000Z' },
+  { restaurantSlug: 'umami-ramen-bar', name: 'Mateo C.', rating: 4, comment: 'Porciones generosas y buen ambiente para ir en pareja.', createdAt: '2026-07-22T19:30:00.000Z' },
+  { restaurantSlug: 'el-fogon-criollo', name: 'Isabella V.', rating: 5, comment: 'La bandeja paisa alcanza para dos personas fácil.', createdAt: '2026-07-09T13:45:00.000Z' },
+  { restaurantSlug: 'el-fogon-criollo', name: 'Santiago L.', rating: 4, comment: 'Excelente parrilla, buena música los fines de semana.', createdAt: '2026-07-19T21:15:00.000Z' },
+  { restaurantSlug: 'verde-oliva-bistro', name: 'Daniela H.', rating: 5, comment: 'El cordero estaba en su punto, servicio muy atento.', createdAt: '2026-07-11T20:00:00.000Z' },
+  { restaurantSlug: 'verde-oliva-bistro', name: 'Nicolás A.', rating: 4, comment: 'Lindo lugar, ideal para una cena tranquila.', createdAt: '2026-07-21T20:30:00.000Z' },
+];
