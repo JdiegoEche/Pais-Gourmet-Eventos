@@ -9,19 +9,31 @@ interface Props {
 const { photos, alt } = Astro.props;
 ---
 
-<div class="photo-gallery">
-  {photos.map((src, index) => (
-    <button
-      type="button"
-      class="photo-gallery__item"
-      data-photo-trigger
-      data-src={src}
-      data-index={index}
-      aria-label={`Ver foto ${index + 1} de ${alt}`}
-    >
-      <img src={thumb(src, 320)} alt={`${alt} — foto ${index + 1}`} loading="lazy" />
-    </button>
-  ))}
+<div class="photo-gallery" data-photo-gallery>
+  <div class="photo-gallery__viewport">
+    <div class="photo-gallery__strip" data-photo-strip>
+      {photos.map((src, index) => (
+        <button
+          type="button"
+          class="photo-gallery__frame"
+          data-photo-trigger
+          data-src={src}
+          data-index={index}
+          aria-label={`Ver foto ${index + 1} de ${alt} en pantalla completa`}
+        >
+          <img src={thumb(src, 1000)} alt={`${alt} — foto ${index + 1}`} loading={index === 0 ? 'eager' : 'lazy'} />
+        </button>
+      ))}
+    </div>
+    {photos.length > 1 && (
+      <>
+        <button type="button" class="photo-gallery__nav photo-gallery__nav--prev" data-strip-prev aria-label="Fotos anteriores">‹</button>
+        <button type="button" class="photo-gallery__nav photo-gallery__nav--next" data-strip-next aria-label="Fotos siguientes">›</button>
+      </>
+    )}
+  </div>
+
+  {photos.length > 1 && <div class="photo-gallery__dots" data-photo-dots></div>}
 </div>
 
 <dialog class="photo-gallery__dialog" data-photo-dialog>
@@ -37,27 +49,63 @@ const { photos, alt } = Astro.props;
 
 <style>
   .photo-gallery {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: var(--spacing-xs);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
   }
-  .photo-gallery__item {
+  .photo-gallery__viewport {
+    position: relative;
+  }
+  .photo-gallery__strip {
+    display: flex;
+    gap: var(--spacing-sm);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+  }
+  .photo-gallery__strip::-webkit-scrollbar {
+    display: none;
+  }
+  .photo-gallery__frame {
+    flex: 0 0 auto;
+    height: 420px;
     padding: 0;
     border: none;
-    background: none;
-    cursor: pointer;
-    aspect-ratio: 1;
-    overflow: hidden;
     border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+    scroll-snap-align: start;
+    background: var(--color-surface);
   }
-  .photo-gallery__item img {
-    width: 100%;
+  .photo-gallery__frame img {
+    display: block;
     height: 100%;
-    object-fit: cover;
-    transition: transform 0.2s ease;
+    width: auto;
   }
-  .photo-gallery__item:hover img {
-    transform: scale(1.05);
+  @media (max-width: 720px) {
+    .photo-gallery__frame {
+      height: 240px;
+    }
+  }
+  .photo-gallery__dots {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  /* Los dots se crean con document.createElement en runtime, así que no reciben
+     el atributo de scope de Astro — deben quedar como reglas globales. */
+  :global(.photo-gallery__dot) {
+    width: 0.6rem;
+    height: 0.6rem;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: var(--color-border);
+    cursor: pointer;
+  }
+  :global(.photo-gallery__dot[aria-current='true']) {
+    background: var(--color-primary);
   }
   .photo-gallery__dialog {
     position: relative;
@@ -116,6 +164,49 @@ const { photos, alt } = Astro.props;
 </style>
 
 <script>
+  const gallery = document.querySelector<HTMLElement>('[data-photo-gallery]');
+  const strip = gallery?.querySelector<HTMLElement>('[data-photo-strip]');
+  const dotsContainer = gallery?.querySelector<HTMLElement>('[data-photo-dots]');
+  const stripPrev = gallery?.querySelector<HTMLButtonElement>('[data-strip-prev]');
+  const stripNext = gallery?.querySelector<HTMLButtonElement>('[data-strip-next]');
+
+  function updateActiveDot() {
+    if (!strip || !dotsContainer || strip.clientWidth === 0) return;
+    const dots = Array.from(dotsContainer.children);
+    const index = Math.round(strip.scrollLeft / strip.clientWidth);
+    dots.forEach((dot, i) => dot.setAttribute('aria-current', String(i === index)));
+  }
+
+  function buildDots() {
+    if (!strip || !dotsContainer || strip.clientWidth === 0) return;
+    const segments = Math.max(1, Math.round(strip.scrollWidth / strip.clientWidth));
+    dotsContainer.innerHTML = '';
+    for (let i = 0; i < segments; i++) {
+      const dot = document.createElement('button');
+      dot.type = 'button';
+      dot.className = 'photo-gallery__dot';
+      dot.setAttribute('aria-label', `Ir a la sección ${i + 1} de fotos`);
+      dot.addEventListener('click', () => {
+        strip.scrollTo({ left: i * strip.clientWidth, behavior: 'smooth' });
+      });
+      dotsContainer.appendChild(dot);
+    }
+    updateActiveDot();
+  }
+
+  strip?.addEventListener('scroll', () => window.requestAnimationFrame(updateActiveDot));
+  window.addEventListener('resize', buildDots);
+  strip?.querySelectorAll('img').forEach((img) => img.addEventListener('load', buildDots));
+  buildDots();
+
+  stripPrev?.addEventListener('click', () => strip?.scrollBy({ left: -(strip.clientWidth), behavior: 'smooth' }));
+  stripNext?.addEventListener('click', () => strip?.scrollBy({ left: strip.clientWidth, behavior: 'smooth' }));
+
+  gallery?.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowLeft') strip?.scrollBy({ left: -(strip.clientWidth), behavior: 'smooth' });
+    if (event.key === 'ArrowRight') strip?.scrollBy({ left: strip.clientWidth, behavior: 'smooth' });
+  });
+
   const dialog = document.querySelector<HTMLDialogElement>('[data-photo-dialog]');
   const dialogImage = dialog?.querySelector<HTMLImageElement>('[data-photo-dialog-image]');
   const prevButton = dialog?.querySelector<HTMLButtonElement>('[data-photo-prev]');
