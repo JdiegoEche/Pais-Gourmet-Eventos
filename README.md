@@ -19,21 +19,57 @@ No hay detección de dominio en runtime (no funciona bien con SSG puro). En camb
 3. Todas las queries a Sanity (home, listado, detalle de restaurante) filtran por ese `EVENT_SLUG`.
 4. El resultado es 7 sitios 100% estáticos, cacheados en el edge, sin servidor propio corriendo.
 
-La única ruta que no es estática es `src/pages/api/reviews.ts` (`prerender = false`), porque las reseñas públicas se escriben en tiempo real.
+Las únicas rutas que no son estáticas son las de `src/pages/api/` (`prerender = false`), porque escriben datos en tiempo real.
+
+## Modelo de datos
+
+Los tipos completos están en `src/types/index.ts`. Resumen de las entidades y sus reglas no obvias:
+
+- **`EventData`** — un evento (uno de los 7). Nombre, fechas, textos del home, rangos de precio/zonas para los filtros, banners rotativos, logos de sponsors, y los slugs de restaurantes destacados/recomendados de la semana.
+- **`Restaurant`** — pertenece a un evento (`eventSlug`). Notas importantes:
+  - `hours` es **texto libre**, no estructurado por día — los datos reales de inscripción vienen en formatos demasiado variados para parsear de forma confiable (ver sección de API abajo).
+  - `whatsapp` puede venir como número plano o como link completo (`https://wa.link/...`); la UI arma el link correcto para ambos casos.
+  - `menuHighlights` (íconos que resumen qué incluye el menú) es un array libre, no una lista fija — todavía no hay artes definidas.
+  - `youtubeVideoUrl` es opcional; si no está, no se muestra nada (no hay placeholder).
+  - `features` incluye `parking`, `petFriendly`, `delivery`, `tableService`, `creditCard` y `paymentMethods` (texto libre, tags).
+  - Pendiente de agregar (datos que ya trae el Excel de inscripción pero el schema no tiene todavía): geolocalización por zona y zonas de cobertura de domicilio.
+- **`Menu` / `MenuItem`** — un restaurante puede tener varios menús (distintos niveles de precio). `currentPrice` es el precio del evento, `previousPrice` es el precio normal fuera del evento (opcional). Cada ítem tiene una `category`: `entrantes` | `fuerte` | `postre`.
+- **`Review`** — reseña pública de un restaurante. `phone` y `email` son **privados**: se piden para alimentar la base de leads pero la API pública nunca los devuelve. `rating` es el promedio redondeado de `foodRating`/`serviceRating`/`ambianceRating` (reseñas viejas solo tienen `rating`, sin desglose). `replies` es un array de `ReviewReply`.
+- **`ReviewReply`** — respuesta pública a una reseña, hoy sin autenticación (ver por qué en la sección de API). Mismo criterio de privacidad que `Review`: `phone`/`email` nunca se exponen.
+- **`LeadSignup`** — inscripción del formulario del home (nombre, email, celular).
+
+## API
+
+Todas las rutas están en `src/pages/api/`, corren server-side (`prerender = false`), y validan que el `Origin` del request coincida con el propio sitio.
+
+| Ruta | Método | Qué hace |
+|---|---|---|
+| `/api/reviews` | `GET ?restaurant=<slug>` | Lista las reseñas públicas de un restaurante (nunca incluye `phone`/`email`, ni de la reseña ni de sus respuestas). |
+| `/api/reviews` | `POST` | Crea una reseña. Body: `restaurantSlug`, `name` (3-30 caracteres), `phone`, `email`, `foodRating`/`serviceRating`/`ambianceRating` (1-5), `comment` (máx. 300). El `rating` general se calcula en el servidor como el promedio redondeado — no se confía en un valor que mande el cliente. |
+| `/api/review-replies` | `POST` | Responde a una reseña existente. Body: `reviewId`, `name` (3-30), `phone`, `email`, `message` (máx. 300). Sin calificaciones. Público, sin login — es la solución provisoria mientras cada restaurante no tenga su propio acceso: los permisos de Sanity por documento son función exclusiva del plan Enterprise, así que darle a un restaurante acceso directo al Studio hoy le mostraría los datos de todos los demás. |
+| `/api/signup` | `POST` | Inscripción del formulario del home. Body: `name` (máx. 100), `email`, `phone`. |
+
+`name`/`phone`/`email` se validan con los mismos patrones en los tres endpoints (`PHONE_PATTERN`/`EMAIL_PATTERN`), duplicados en cada archivo a propósito — son rutas chicas y autocontenidas, no vale la pena compartir un módulo para esto todavía.
 
 ## Estructura
 
 ```
 src/
-├── components/     # EventHero, RestaurantCard, PhotoGallery, RestaurantFilters, ReviewForm, ReviewList
+├── components/     # EventHero, RestaurantCard, PhotoGallery, RestaurantFilters,
+│                   # ReviewForm, ReviewList, ShareButtons, SignupForm, RotatingBanner,
+│                   # WhatIncludesShowcase, ZoneMosaic, PriceMosaic, WeeklyRecommended,
+│                   # RestaurantLogoStrip, SponsorsSection
 ├── layouts/        # Layout.astro
-├── lib/sanity.ts   # cliente de lectura (CDN) + cliente de escritura server-only (reseñas)
+├── lib/
+│   ├── sanity.ts   # cliente de lectura (CDN) + cliente de escritura server-only
+│   ├── data.ts     # capa de acceso a datos (elige repositorio mock o Sanity)
+│   └── repositories/  # ports.ts (interfaces) + implementaciones mock/ y sanity/
 ├── pages/
 │   ├── index.astro
 │   ├── restaurantes-participantes/index.astro
 │   ├── restaurante/[slug].astro
-│   └── api/reviews.ts
-└── types/index.ts  # Event, Restaurant, Menu, Review
+│   └── api/reviews.ts, review-replies.ts, signup.ts
+└── types/index.ts  # EventData, Restaurant, Menu, MenuItem, Review, ReviewReply, LeadSignup
 ```
 
 ## Correr en local
