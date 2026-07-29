@@ -29,8 +29,35 @@ export const mockEvent: EventData = {
   ],
 };
 
+// Set curado a mano (verificadas una por una) de fotos de alta gastronomía y restaurantes en
+// Unsplash — un servicio de fotos aleatorias por palabra clave (LoremFlickr, source.unsplash.com)
+// devolvía resultados de mala calidad o directamente estaba caído.
+const FOOD_PHOTO_IDS = [
+  '1414235077428-338989a2e8c0', // plato servido en mesa de restaurante
+  '1517248135467-4c7edcad34c4', // interior de restaurante elegante
+  '1555396273-367ea4eb4db5', // interior de café/restaurante casual
+  '1546069901-ba9599a7e63c', // bowl de comida saludable
+  '1567620905732-2d1ec7ab7445', // panqueques con miel
+  '1568901346375-23c9450c58cd', // hamburguesa gourmet
+  '1621996346565-e3dbc646d9a9', // pasta
+  '1580822184713-fc5400e7fe10', // sushi
+];
+
+function seedToIndex(seed: string, length: number): number {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  }
+  return hash % length;
+}
+
+function foodPhoto(seed: string, width: number, height: number): string {
+  const id = FOOD_PHOTO_IDS[seedToIndex(seed, FOOD_PHOTO_IDS.length)];
+  return `https://images.unsplash.com/photo-${id}?w=${width}&h=${height}&fit=crop`;
+}
+
 function gallery(slug: string, count: number): string[] {
-  return Array.from({ length: count }, (_, i) => `https://picsum.photos/seed/${slug}-${i + 1}/800/600`);
+  return Array.from({ length: count }, (_, i) => foodPhoto(`${slug}-${i + 1}`, 800, 600));
 }
 
 export const mockRestaurants: Restaurant[] = [
@@ -38,7 +65,7 @@ export const mockRestaurants: Restaurant[] = [
     slug: 'la-tulpa-fuego-y-cafe',
     eventSlug: 'pais-gourmet-demo',
     name: 'La Tulpa Fuego y Café',
-    logo: 'https://picsum.photos/seed/la-tulpa-fuego-y-cafe-logo/200/200',
+    logo: foodPhoto('la-tulpa-fuego-y-cafe-logo', 200, 200),
     cuisineTypes: ['Colombiana', 'Fusión'],
     zone: 'Armenia',
     address: 'Calle 10 # 14-32, Armenia, Quindío',
@@ -68,7 +95,7 @@ export const mockRestaurants: Restaurant[] = [
     slug: 'trattoria-girasol',
     eventSlug: 'pais-gourmet-demo',
     name: 'Trattoria Girasol',
-    logo: 'https://picsum.photos/seed/trattoria-girasol-logo/200/200',
+    logo: foodPhoto('trattoria-girasol-logo', 200, 200),
     cuisineTypes: ['Italiana'],
     zone: 'Pereira',
     address: 'Avenida Circunvalar # 5-21, Pereira, Risaralda',
@@ -107,7 +134,7 @@ export const mockRestaurants: Restaurant[] = [
     slug: 'sazon-del-eje',
     eventSlug: 'pais-gourmet-demo',
     name: 'Sazón del Eje',
-    logo: 'https://picsum.photos/seed/sazon-del-eje-logo/200/200',
+    logo: foodPhoto('sazon-del-eje-logo', 200, 200),
     cuisineTypes: ['Colombiana'],
     zone: 'Manizales',
     address: 'Carrera 23 # 62-18, Manizales, Caldas',
@@ -136,7 +163,7 @@ export const mockRestaurants: Restaurant[] = [
     slug: 'umami-ramen-bar',
     eventSlug: 'pais-gourmet-demo',
     name: 'Umami Ramen Bar',
-    logo: 'https://picsum.photos/seed/umami-ramen-bar-logo/200/200',
+    logo: foodPhoto('umami-ramen-bar-logo', 200, 200),
     cuisineTypes: ['Asiática', 'Fusión'],
     zone: 'Armenia',
     address: 'Calle 21 # 18-45, Armenia, Quindío',
@@ -166,7 +193,7 @@ export const mockRestaurants: Restaurant[] = [
     slug: 'el-fogon-criollo',
     eventSlug: 'pais-gourmet-demo',
     name: 'El Fogón Criollo',
-    logo: 'https://picsum.photos/seed/el-fogon-criollo-logo/200/200',
+    logo: foodPhoto('el-fogon-criollo-logo', 200, 200),
     cuisineTypes: ['Colombiana', 'Parrilla'],
     zone: 'Pereira',
     address: 'Calle 14 # 22-08, Pereira, Risaralda',
@@ -196,7 +223,7 @@ export const mockRestaurants: Restaurant[] = [
     slug: 'verde-oliva-bistro',
     eventSlug: 'pais-gourmet-demo',
     name: 'Verde Oliva Bistró',
-    logo: 'https://picsum.photos/seed/verde-oliva-bistro-logo/200/200',
+    logo: foodPhoto('verde-oliva-bistro-logo', 200, 200),
     cuisineTypes: ['Mediterránea'],
     zone: 'Manizales',
     address: 'Carrera 19 # 27-40, Manizales, Caldas',
