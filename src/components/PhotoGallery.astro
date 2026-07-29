@@ -16,6 +16,7 @@ const { photos, alt } = Astro.props;
       class="photo-gallery__item"
       data-photo-trigger
       data-src={src}
+      data-index={index}
       aria-label={`Ver foto ${index + 1} de ${alt}`}
     >
       <img src={thumb(src, 320)} alt={`${alt} — foto ${index + 1}`} loading="lazy" />
@@ -25,6 +26,12 @@ const { photos, alt } = Astro.props;
 
 <dialog class="photo-gallery__dialog" data-photo-dialog>
   <button type="button" class="photo-gallery__close" data-photo-close aria-label="Cerrar">✕</button>
+  {photos.length > 1 && (
+    <>
+      <button type="button" class="photo-gallery__nav photo-gallery__nav--prev" data-photo-prev aria-label="Foto anterior">‹</button>
+      <button type="button" class="photo-gallery__nav photo-gallery__nav--next" data-photo-next aria-label="Foto siguiente">›</button>
+    </>
+  )}
   <img data-photo-dialog-image alt="" />
 </dialog>
 
@@ -81,18 +88,62 @@ const { photos, alt } = Astro.props;
     height: 2rem;
     cursor: pointer;
   }
+  .photo-gallery__nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--color-surface);
+    border: none;
+    border-radius: 50%;
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1.5rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .photo-gallery__nav:hover {
+    background: var(--color-accent);
+  }
+  .photo-gallery__nav--prev {
+    left: 0.5rem;
+  }
+  .photo-gallery__nav--next {
+    right: 0.5rem;
+  }
 </style>
 
 <script>
   const dialog = document.querySelector<HTMLDialogElement>('[data-photo-dialog]');
   const dialogImage = dialog?.querySelector<HTMLImageElement>('[data-photo-dialog-image]');
+  const prevButton = dialog?.querySelector<HTMLButtonElement>('[data-photo-prev]');
+  const nextButton = dialog?.querySelector<HTMLButtonElement>('[data-photo-next]');
+  const triggers = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-photo-trigger]'));
 
-  document.querySelectorAll<HTMLButtonElement>('[data-photo-trigger]').forEach((trigger) => {
+  let currentIndex = 0;
+
+  function showPhoto(index: number) {
+    if (!dialogImage || triggers.length === 0) return;
+    currentIndex = (index + triggers.length) % triggers.length;
+    dialogImage.src = triggers[currentIndex].dataset.src ?? '';
+  }
+
+  triggers.forEach((trigger, index) => {
     trigger.addEventListener('click', () => {
-      if (!dialog || !dialogImage) return;
-      dialogImage.src = trigger.dataset.src ?? '';
+      if (!dialog) return;
+      showPhoto(index);
       dialog.showModal();
     });
+  });
+
+  prevButton?.addEventListener('click', () => showPhoto(currentIndex - 1));
+  nextButton?.addEventListener('click', () => showPhoto(currentIndex + 1));
+
+  dialog?.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowLeft') showPhoto(currentIndex - 1);
+    if (event.key === 'ArrowRight') showPhoto(currentIndex + 1);
   });
 
   document.querySelector('[data-photo-close]')?.addEventListener('click', () => dialog?.close());
