@@ -33,6 +33,8 @@ export class SanityReviewRepository implements ReviewRepository {
       _type: 'review',
       restaurant: { _type: 'reference', _ref: restaurantId },
       name: review.name,
+      phone: review.phone,
+      email: review.email,
       rating: review.rating,
       foodRating: review.foodRating,
       serviceRating: review.serviceRating,

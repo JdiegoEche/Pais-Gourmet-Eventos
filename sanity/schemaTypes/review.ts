@@ -19,6 +19,18 @@ export default defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
+      name: 'phone',
+      title: 'Celular',
+      description: 'Dato privado para la base de leads. Nunca se muestra en el sitio.',
+      type: 'string',
+    }),
+    defineField({
+      name: 'email',
+      title: 'Correo electrónico',
+      description: 'Dato privado para la base de leads. Nunca se muestra en el sitio.',
+      type: 'string',
+    }),
+    defineField({
       name: 'rating',
       title: 'Calificación general',
       description: 'Promedio de comida, servicio y ambiente. Reseñas antiguas solo tienen este campo.',

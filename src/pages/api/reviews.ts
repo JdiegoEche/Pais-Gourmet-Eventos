@@ -5,6 +5,8 @@ export const prerender = false;
 
 const MAX_NAME_LENGTH = 100;
 const MAX_COMMENT_LENGTH = 1000;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_PATTERN = /^[0-9+\s()-]{7,20}$/;
 
 // Anti-spam de contenido (Turnstile) y rate limiting por IP (Cloudflare Rate Limiting Rules)
 // quedan pendientes de configuración en la cuenta de Cloudflare — ver README.md.
@@ -25,7 +27,7 @@ export const POST: APIRoute = async ({ request, url }) => {
     return new Response(JSON.stringify({ error: 'Datos inválidos' }), { status: 400 });
   }
 
-  const { restaurantSlug, name, foodRating, serviceRating, ambianceRating, comment } = body as Record<
+  const { restaurantSlug, name, phone, email, foodRating, serviceRating, ambianceRating, comment } = body as Record<
     string,
     unknown
   >;
@@ -38,6 +40,10 @@ export const POST: APIRoute = async ({ request, url }) => {
     typeof name !== 'string' ||
     !name.trim() ||
     name.trim().length > MAX_NAME_LENGTH ||
+    typeof phone !== 'string' ||
+    !PHONE_PATTERN.test(phone.trim()) ||
+    typeof email !== 'string' ||
+    !EMAIL_PATTERN.test(email.trim()) ||
     typeof comment !== 'string' ||
     !comment.trim() ||
     comment.trim().length > MAX_COMMENT_LENGTH ||
@@ -54,13 +60,19 @@ export const POST: APIRoute = async ({ request, url }) => {
     const review = await createReview({
       restaurantSlug,
       name: name.trim(),
+      phone: phone.trim(),
+      email: email.trim(),
       rating,
       foodRating,
       serviceRating,
       ambianceRating,
       comment: comment.trim(),
     });
-    return new Response(JSON.stringify(review), { status: 201 });
+    const { name: publicName, rating: publicRating, foodRating: fr, serviceRating: sr, ambianceRating: ar, comment: publicComment, createdAt } = review;
+    return new Response(
+      JSON.stringify({ name: publicName, rating: publicRating, foodRating: fr, serviceRating: sr, ambianceRating: ar, comment: publicComment, createdAt }),
+      { status: 201 }
+    );
   } catch {
     return new Response(JSON.stringify({ error: 'No se pudo publicar la reseña' }), { status: 500 });
   }
@@ -72,5 +84,15 @@ export const GET: APIRoute = async ({ url }) => {
     return new Response(JSON.stringify({ error: 'Falta el parámetro restaurant' }), { status: 400 });
   }
   const reviews = await getReviews(restaurantSlug);
-  return new Response(JSON.stringify(reviews), { status: 200 });
+  // Nunca se exponen phone/email: son datos privados para la base de leads.
+  const publicReviews = reviews.map(({ name, rating, foodRating, serviceRating, ambianceRating, comment, createdAt }) => ({
+    name,
+    rating,
+    foodRating,
+    serviceRating,
+    ambianceRating,
+    comment,
+    createdAt,
+  }));
+  return new Response(JSON.stringify(publicReviews), { status: 200 });
 };

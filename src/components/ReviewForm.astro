@@ -9,6 +9,9 @@ const { restaurantSlug } = Astro.props;
 <form class="review-form" data-review-form data-restaurant-slug={restaurantSlug}>
   <h3>Dejá tu reseña</h3>
   <input type="text" name="name" placeholder="Tu nombre" required />
+  <input type="tel" name="phone" placeholder="Tu celular" required />
+  <input type="email" name="email" placeholder="Tu email" required />
+  <p class="review-form__privacy">Tu celular y email no se publican, solo los usamos para contactarte.</p>
   <div class="review-form__ratings">
     <label class="review-form__rating">
       Comida
@@ -60,6 +63,11 @@ const { restaurantSlug } = Astro.props;
   .review-form h3 {
     margin: 0 0 0.25rem;
     color: var(--color-primary-dark);
+  }
+  .review-form__privacy {
+    margin: -0.25rem 0 0;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
   }
   .review-form input,
   .review-form select,
@@ -128,6 +136,8 @@ const { restaurantSlug } = Astro.props;
         body: JSON.stringify({
           restaurantSlug,
           name: formData.get('name'),
+          phone: formData.get('phone'),
+          email: formData.get('email'),
           foodRating: Number(formData.get('foodRating')),
           serviceRating: Number(formData.get('serviceRating')),
           ambianceRating: Number(formData.get('ambianceRating')),

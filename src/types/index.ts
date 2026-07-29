@@ -67,6 +67,10 @@ export interface Restaurant {
 export interface Review {
   restaurantSlug: string;
   name: string;
+  // Datos de contacto privados: se piden en el formulario para alimentar la base de datos
+  // de leads, pero nunca se exponen por la API pública ni se muestran en el sitio.
+  phone?: string;
+  email?: string;
   rating: 1 | 2 | 3 | 4 | 5;
   foodRating?: 1 | 2 | 3 | 4 | 5;
   serviceRating?: 1 | 2 | 3 | 4 | 5;
