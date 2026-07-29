@@ -3,7 +3,9 @@ import Layout from '../../layouts/Layout.astro';
 import PhotoGallery from '../../components/PhotoGallery.astro';
 import ReviewForm from '../../components/ReviewForm.astro';
 import ReviewList from '../../components/ReviewList.astro';
-import { getAllRestaurants, getReviews } from '../../lib/data';
+import RestaurantCard from '../../components/RestaurantCard.astro';
+import ShareButtons from '../../components/ShareButtons.astro';
+import { getAllRestaurants, getReviews, getRelatedRestaurants } from '../../lib/data';
 import type { Restaurant } from '../../types';
 
 export async function getStaticPaths() {
@@ -20,6 +22,7 @@ interface Props {
 
 const { restaurant } = Astro.props;
 const reviews = await getReviews(restaurant.slug);
+const relatedRestaurants = await getRelatedRestaurants(restaurant);
 
 const dayLabels: Record<string, string> = {
   lunes: 'Lunes',
@@ -37,13 +40,48 @@ const menuCategories = ['entrantes', 'fuerte', 'postre'] as const;
 <Layout title={restaurant.name}>
   <article class="restaurant-detail">
     <header class="restaurant-detail__header">
-      <h1>{restaurant.name}</h1>
-      <p class="restaurant-detail__meta">{restaurant.cuisineTypes.join(', ')} · {restaurant.zone}</p>
+      <div>
+        <h1>{restaurant.name}</h1>
+        <p class="restaurant-detail__meta">{restaurant.cuisineTypes.join(', ')} · {restaurant.zone}</p>
+      </div>
+      <ShareButtons title={restaurant.name} />
     </header>
 
     <PhotoGallery photos={restaurant.gallery} alt={restaurant.name} />
 
-    <div class="restaurant-detail__grid">
+    <div class="restaurant-detail__tabs" role="tablist" aria-label="Secciones del restaurante">
+      <button
+        type="button"
+        class="restaurant-detail__tab"
+        role="tab"
+        id="tab-info"
+        aria-controls="panel-info"
+        aria-selected="true"
+        data-tab-trigger="info"
+      >
+        Información
+      </button>
+      <button
+        type="button"
+        class="restaurant-detail__tab"
+        role="tab"
+        id="tab-valoraciones"
+        aria-controls="panel-valoraciones"
+        aria-selected="false"
+        tabindex="-1"
+        data-tab-trigger="valoraciones"
+      >
+        Valoraciones ({reviews.length})
+      </button>
+    </div>
+
+    <div
+      class="restaurant-detail__grid"
+      id="panel-info"
+      role="tabpanel"
+      aria-labelledby="tab-info"
+      data-tab-panel="info"
+    >
       <section class="restaurant-detail__info">
         <h2>Información</h2>
         <p>{restaurant.address}</p>
@@ -111,10 +149,28 @@ const menuCategories = ['entrantes', 'fuerte', 'postre'] as const;
       </section>
     </div>
 
-    <section class="restaurant-detail__reviews">
+    <section
+      class="restaurant-detail__reviews"
+      id="panel-valoraciones"
+      role="tabpanel"
+      aria-labelledby="tab-valoraciones"
+      data-tab-panel="valoraciones"
+      hidden
+    >
       <ReviewList restaurantSlug={restaurant.slug} reviews={reviews} />
       <ReviewForm restaurantSlug={restaurant.slug} />
     </section>
+
+    {relatedRestaurants.length > 0 && (
+      <section class="restaurant-detail__related">
+        <h2>Recomendados para ti</h2>
+        <div class="restaurant-detail__related-grid">
+          {relatedRestaurants.map((related) => (
+            <RestaurantCard restaurant={related} />
+          ))}
+        </div>
+      </section>
+    )}
   </article>
 </Layout>
 
@@ -127,12 +183,44 @@ const menuCategories = ['entrantes', 'fuerte', 'postre'] as const;
     flex-direction: column;
     gap: var(--spacing-lg);
   }
+  .restaurant-detail__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+  }
   .restaurant-detail__header h1 {
     color: var(--color-primary-dark);
     margin-bottom: 0.25rem;
   }
   .restaurant-detail__meta {
     color: var(--color-text-muted);
+  }
+  .restaurant-detail__tabs {
+    display: flex;
+    gap: var(--spacing-sm);
+    border-bottom: 1px solid var(--color-border);
+  }
+  .restaurant-detail__tab {
+    padding: 0.75rem 1rem;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    font: inherit;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    cursor: pointer;
+  }
+  .restaurant-detail__tab:hover {
+    color: var(--color-primary-dark);
+  }
+  .restaurant-detail__tab[aria-selected='true'] {
+    color: var(--color-primary-dark);
+    border-bottom-color: var(--color-primary);
+  }
+  [data-tab-panel][hidden] {
+    display: none;
   }
   .restaurant-detail__grid {
     display: grid;
@@ -194,6 +282,14 @@ const menuCategories = ['entrantes', 'fuerte', 'postre'] as const;
     grid-template-columns: 1fr 1fr;
     gap: var(--spacing-lg);
   }
+  .restaurant-detail__related h2 {
+    color: var(--color-primary-dark);
+  }
+  .restaurant-detail__related-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: var(--spacing-md);
+  }
   @media (max-width: 720px) {
     .restaurant-detail__grid,
     .restaurant-detail__reviews {
@@ -201,3 +297,31 @@ const menuCategories = ['entrantes', 'fuerte', 'postre'] as const;
     }
   }
 </style>
+
+<script>
+  const tabButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-tab-trigger]'));
+  const tabPanels = Array.from(document.querySelectorAll<HTMLElement>('[data-tab-panel]'));
+
+  function activateTab(name: string) {
+    tabButtons.forEach((button) => {
+      const isActive = button.dataset.tabTrigger === name;
+      button.setAttribute('aria-selected', String(isActive));
+      button.tabIndex = isActive ? 0 : -1;
+    });
+    tabPanels.forEach((panel) => {
+      panel.hidden = panel.dataset.tabPanel !== name;
+    });
+  }
+
+  tabButtons.forEach((button, index) => {
+    button.addEventListener('click', () => activateTab(button.dataset.tabTrigger ?? ''));
+    button.addEventListener('keydown', (event) => {
+      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+      const nextIndex = event.key === 'ArrowLeft'
+        ? (index - 1 + tabButtons.length) % tabButtons.length
+        : (index + 1) % tabButtons.length;
+      tabButtons[nextIndex].focus();
+      activateTab(tabButtons[nextIndex].dataset.tabTrigger ?? '');
+    });
+  });
+</script>

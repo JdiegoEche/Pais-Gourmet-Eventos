@@ -1,0 +1,63 @@
+---
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<div class="share-buttons" data-share-buttons data-share-title={title}>
+  <a class="share-buttons__link" data-share="whatsapp" href="#" target="_blank" rel="noopener">WhatsApp</a>
+  <a class="share-buttons__link" data-share="facebook" href="#" target="_blank" rel="noopener">Facebook</a>
+  <a class="share-buttons__link" data-share="x" href="#" target="_blank" rel="noopener">X</a>
+  <button type="button" class="share-buttons__link share-buttons__copy" data-share-copy>Copiar enlace</button>
+</div>
+
+<style>
+  .share-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .share-buttons__link {
+    padding: 0.35rem 0.85rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-surface);
+    color: var(--color-text);
+    font: inherit;
+    font-size: 0.85rem;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .share-buttons__link:hover {
+    background: var(--color-accent);
+  }
+</style>
+
+<script>
+  const container = document.querySelector<HTMLElement>('[data-share-buttons]');
+  const title = container?.dataset.shareTitle ?? '';
+  const url = window.location.href;
+
+  const targets: Record<string, string> = {
+    whatsapp: `https://wa.me/?text=${encodeURIComponent(`${title} ${url}`)}`,
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
+    x: `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`,
+  };
+
+  container?.querySelectorAll<HTMLAnchorElement>('[data-share]').forEach((link) => {
+    const key = link.dataset.share;
+    if (key && targets[key]) link.href = targets[key];
+  });
+
+  const copyButton = container?.querySelector<HTMLButtonElement>('[data-share-copy]');
+  copyButton?.addEventListener('click', async () => {
+    await navigator.clipboard.writeText(url);
+    const original = copyButton.textContent;
+    copyButton.textContent = '¡Copiado!';
+    setTimeout(() => {
+      copyButton.textContent = original;
+    }, 2000);
+  });
+</script>

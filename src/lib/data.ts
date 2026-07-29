@@ -62,6 +62,11 @@ export async function getRestaurantBySlug(slug: string): Promise<Restaurant | nu
   return (await restaurantRepository()).getBySlug(slug);
 }
 
+export async function getRelatedRestaurants(restaurant: Restaurant): Promise<Restaurant[]> {
+  if (restaurant.relatedRestaurantSlugs.length === 0) return [];
+  return (await restaurantRepository()).getFeatured(restaurant.relatedRestaurantSlugs);
+}
+
 export async function getReviews(restaurantSlug: string): Promise<Review[]> {
   return (await reviewRepository()).getByRestaurant(restaurantSlug);
 }
