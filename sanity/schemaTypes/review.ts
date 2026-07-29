@@ -20,9 +20,28 @@ export default defineType({
     }),
     defineField({
       name: 'rating',
-      title: 'Calificación',
+      title: 'Calificación general',
+      description: 'Promedio de comida, servicio y ambiente. Reseñas antiguas solo tienen este campo.',
       type: 'number',
       validation: (Rule) => Rule.required().min(1).max(5).integer(),
+    }),
+    defineField({
+      name: 'foodRating',
+      title: 'Calificación de comida',
+      type: 'number',
+      validation: (Rule) => Rule.min(1).max(5).integer(),
+    }),
+    defineField({
+      name: 'serviceRating',
+      title: 'Calificación de servicio',
+      type: 'number',
+      validation: (Rule) => Rule.min(1).max(5).integer(),
+    }),
+    defineField({
+      name: 'ambianceRating',
+      title: 'Calificación de ambiente',
+      type: 'number',
+      validation: (Rule) => Rule.min(1).max(5).integer(),
     }),
     defineField({
       name: 'comment',

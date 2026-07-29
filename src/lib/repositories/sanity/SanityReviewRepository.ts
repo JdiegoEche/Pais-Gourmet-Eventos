@@ -9,6 +9,9 @@ export class SanityReviewRepository implements ReviewRepository {
         "restaurantSlug": restaurant->slug.current,
         name,
         rating,
+        foodRating,
+        serviceRating,
+        ambianceRating,
         comment,
         createdAt
       }`,
@@ -31,6 +34,9 @@ export class SanityReviewRepository implements ReviewRepository {
       restaurant: { _type: 'reference', _ref: restaurantId },
       name: review.name,
       rating: review.rating,
+      foodRating: review.foodRating,
+      serviceRating: review.serviceRating,
+      ambianceRating: review.ambianceRating,
       comment: review.comment,
       createdAt: review.createdAt,
     });

@@ -25,7 +25,13 @@ export const POST: APIRoute = async ({ request, url }) => {
     return new Response(JSON.stringify({ error: 'Datos inválidos' }), { status: 400 });
   }
 
-  const { restaurantSlug, name, rating, comment } = body as Record<string, unknown>;
+  const { restaurantSlug, name, foodRating, serviceRating, ambianceRating, comment } = body as Record<
+    string,
+    unknown
+  >;
+
+  const isValidSubRating = (value: unknown): value is 1 | 2 | 3 | 4 | 5 =>
+    Number.isInteger(value) && (value as number) >= 1 && (value as number) <= 5;
 
   if (
     typeof restaurantSlug !== 'string' ||
@@ -35,18 +41,23 @@ export const POST: APIRoute = async ({ request, url }) => {
     typeof comment !== 'string' ||
     !comment.trim() ||
     comment.trim().length > MAX_COMMENT_LENGTH ||
-    !Number.isInteger(rating) ||
-    (rating as number) < 1 ||
-    (rating as number) > 5
+    !isValidSubRating(foodRating) ||
+    !isValidSubRating(serviceRating) ||
+    !isValidSubRating(ambianceRating)
   ) {
     return new Response(JSON.stringify({ error: 'Datos inválidos' }), { status: 400 });
   }
+
+  const rating = Math.round((foodRating + serviceRating + ambianceRating) / 3) as 1 | 2 | 3 | 4 | 5;
 
   try {
     const review = await createReview({
       restaurantSlug,
       name: name.trim(),
-      rating: rating as 1 | 2 | 3 | 4 | 5,
+      rating,
+      foodRating,
+      serviceRating,
+      ambianceRating,
       comment: comment.trim(),
     });
     return new Response(JSON.stringify(review), { status: 201 });

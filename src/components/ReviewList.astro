@@ -7,6 +7,10 @@ interface Props {
 }
 
 const { restaurantSlug, reviews } = Astro.props;
+
+function stars(value: number) {
+  return '★'.repeat(value) + '☆'.repeat(5 - value);
+}
 ---
 
 <section class="review-list" data-review-list data-restaurant-slug={restaurantSlug}>
@@ -16,8 +20,13 @@ const { restaurantSlug, reviews } = Astro.props;
       <li>
         <div class="review-list__header">
           <strong>{review.name}</strong>
-          <span class="review-list__rating">{'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}</span>
+          <span class="review-list__rating">{stars(review.rating)}</span>
         </div>
+        {review.foodRating && review.serviceRating && review.ambianceRating && (
+          <p class="review-list__breakdown">
+            Comida {stars(review.foodRating)} · Servicio {stars(review.serviceRating)} · Ambiente {stars(review.ambianceRating)}
+          </p>
+        )}
         <p>{review.comment}</p>
       </li>
     ))}
@@ -49,12 +58,20 @@ const { restaurantSlug, reviews } = Astro.props;
     color: var(--color-accent);
     letter-spacing: 0.1em;
   }
+  .review-list__breakdown {
+    margin: 0 0 0.25rem;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+  }
 </style>
 
 <script>
   interface ReviewDTO {
     name: string;
     rating: number;
+    foodRating?: number;
+    serviceRating?: number;
+    ambianceRating?: number;
     comment: string;
   }
 
@@ -68,23 +85,31 @@ const { restaurantSlug, reviews } = Astro.props;
     return div.innerHTML;
   }
 
+  function stars(value: number) {
+    return '★'.repeat(value) + '☆'.repeat(5 - value);
+  }
+
   function renderReviews(reviews: ReviewDTO[]) {
     if (!list || !container) return;
     const heading = container.querySelector('h3');
     if (heading) heading.textContent = `Reseñas (${reviews.length})`;
 
     list.innerHTML = reviews
-      .map(
-        (review) => `
+      .map((review) => {
+        const breakdown = review.foodRating && review.serviceRating && review.ambianceRating
+          ? `<p class="review-list__breakdown">Comida ${stars(review.foodRating)} · Servicio ${stars(review.serviceRating)} · Ambiente ${stars(review.ambianceRating)}</p>`
+          : '';
+        return `
           <li>
             <div class="review-list__header">
               <strong>${escapeHtml(review.name)}</strong>
-              <span class="review-list__rating">${'★'.repeat(review.rating)}${'☆'.repeat(5 - review.rating)}</span>
+              <span class="review-list__rating">${stars(review.rating)}</span>
             </div>
+            ${breakdown}
             <p>${escapeHtml(review.comment)}</p>
           </li>
-        `
-      )
+        `;
+      })
       .join('');
   }
 

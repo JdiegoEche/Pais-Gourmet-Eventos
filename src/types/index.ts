@@ -68,6 +68,9 @@ export interface Review {
   restaurantSlug: string;
   name: string;
   rating: 1 | 2 | 3 | 4 | 5;
+  foodRating?: 1 | 2 | 3 | 4 | 5;
+  serviceRating?: 1 | 2 | 3 | 4 | 5;
+  ambianceRating?: 1 | 2 | 3 | 4 | 5;
   comment: string;
   createdAt: string;
 }
