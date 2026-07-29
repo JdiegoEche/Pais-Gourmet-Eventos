@@ -3,8 +3,9 @@ import { createReview, getReviews } from '../../lib/data';
 
 export const prerender = false;
 
-const MAX_NAME_LENGTH = 100;
-const MAX_COMMENT_LENGTH = 1000;
+const MIN_NAME_LENGTH = 3;
+const MAX_NAME_LENGTH = 30;
+const MAX_COMMENT_LENGTH = 300;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_PATTERN = /^[0-9+\s()-]{7,20}$/;
 
@@ -38,7 +39,7 @@ export const POST: APIRoute = async ({ request, url }) => {
   if (
     typeof restaurantSlug !== 'string' ||
     typeof name !== 'string' ||
-    !name.trim() ||
+    name.trim().length < MIN_NAME_LENGTH ||
     name.trim().length > MAX_NAME_LENGTH ||
     typeof phone !== 'string' ||
     !PHONE_PATTERN.test(phone.trim()) ||

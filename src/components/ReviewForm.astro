@@ -8,7 +8,7 @@ const { restaurantSlug } = Astro.props;
 
 <form class="review-form" data-review-form data-restaurant-slug={restaurantSlug}>
   <h3>Dejá tu reseña</h3>
-  <input type="text" name="name" placeholder="Tu nombre" required />
+  <input type="text" name="name" placeholder="Tu nombre" required minlength="3" maxlength="30" />
   <input type="tel" name="phone" placeholder="Tu celular" required />
   <input type="email" name="email" placeholder="Tu email" required />
   <p class="review-form__privacy">Tu celular y email no se publican, solo los usamos para contactarte.</p>
@@ -44,7 +44,7 @@ const { restaurantSlug } = Astro.props;
       </select>
     </label>
   </div>
-  <textarea name="comment" placeholder="Contanos cómo fue tu experiencia" required></textarea>
+  <textarea name="comment" placeholder="Contanos cómo fue tu experiencia" required maxlength="300"></textarea>
   <button type="submit">Publicar reseña</button>
   <p class="review-form__status" data-review-status role="status"></p>
 </form>
