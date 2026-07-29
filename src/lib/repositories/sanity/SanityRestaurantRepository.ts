@@ -6,6 +6,7 @@ const restaurantProjection = `{
   "slug": slug.current,
   "eventSlug": event->slug.current,
   name,
+  "logo": logo.asset->url,
   cuisineTypes,
   zone,
   address,

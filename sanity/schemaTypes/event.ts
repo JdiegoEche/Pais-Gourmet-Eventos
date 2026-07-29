@@ -38,6 +38,13 @@ export default defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
+      name: 'whatIncludesImage',
+      title: 'Imagen de "¿Qué incluye?"',
+      description: 'Imagen mostrada en la sección "¿Qué incluye?" del home',
+      type: 'image',
+      options: {hotspot: true},
+    }),
+    defineField({
       name: 'priceRanges',
       title: 'Rangos de precio',
       description: 'Usados como filtro, ej. "$85k - $105k para 2 personas"',
@@ -54,6 +61,13 @@ export default defineType({
       options: {layout: 'tags'},
     }),
     defineField({
+      name: 'zoneShowcase',
+      title: 'Zonas destacadas (home)',
+      description: 'Mosaico de zonas con nombre e imagen para el home. Independiente del filtro de zonas.',
+      type: 'array',
+      of: [defineArrayMember({type: 'zoneShowcaseItem'})],
+    }),
+    defineField({
       name: 'featuredRestaurants',
       title: 'Restaurantes destacados',
       type: 'array',
@@ -63,6 +77,31 @@ export default defineType({
           to: [{type: 'restaurant'}],
         }),
       ],
+    }),
+    defineField({
+      name: 'weeklyRecommendedEnabled',
+      title: 'Mostrar "Recomendados de la semana"',
+      description: 'Prende o apaga la sección de recomendados de la semana en el home',
+      type: 'boolean',
+      initialValue: false,
+    }),
+    defineField({
+      name: 'weeklyRecommendedRestaurants',
+      title: 'Restaurantes recomendados de la semana',
+      type: 'array',
+      of: [
+        defineArrayMember({
+          type: 'reference',
+          to: [{type: 'restaurant'}],
+        }),
+      ],
+    }),
+    defineField({
+      name: 'banners',
+      title: 'Banners rotativos (home)',
+      description: 'Imágenes del banner que rota cada 3 segundos en el home',
+      type: 'array',
+      of: [defineArrayMember({type: 'image', options: {hotspot: true}})],
     }),
     defineField({
       name: 'sponsorLogos',

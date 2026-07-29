@@ -4,10 +4,20 @@ export interface EventData {
   startDate: string;
   endDate: string;
   whatIncludes: string;
+  whatIncludesImage: string;
   priceRanges: string[];
   zones: string[];
+  zoneShowcase: ZoneShowcaseItem[];
   featuredRestaurantSlugs: string[];
+  weeklyRecommendedEnabled: boolean;
+  weeklyRecommendedRestaurantSlugs: string[];
+  banners: string[];
   sponsorLogos: { name: string; imageUrl: string }[];
+}
+
+export interface ZoneShowcaseItem {
+  name: string;
+  imageUrl: string;
 }
 
 export interface MenuItem {
@@ -40,6 +50,7 @@ export interface Restaurant {
   slug: string;
   eventSlug: string;
   name: string;
+  logo?: string;
   cuisineTypes: string[];
   zone: string;
   address: string;
@@ -58,5 +69,12 @@ export interface Review {
   name: string;
   rating: 1 | 2 | 3 | 4 | 5;
   comment: string;
+  createdAt: string;
+}
+
+export interface LeadSignup {
+  name: string;
+  email: string;
+  phone: string;
   createdAt: string;
 }

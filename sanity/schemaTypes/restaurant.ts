@@ -19,6 +19,13 @@ export default defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
+      name: 'logo',
+      title: 'Logo',
+      description: 'Usado en la tira de logos del home. Si falta, se usa la primera foto de la galería.',
+      type: 'image',
+      options: {hotspot: true},
+    }),
+    defineField({
       name: 'event',
       title: 'Evento',
       type: 'reference',

@@ -6,6 +6,7 @@ import menu from './objects/menu'
 import menuItem from './objects/menuItem'
 import sponsorLogo from './objects/sponsorLogo'
 import weeklyHours from './objects/weeklyHours'
+import zoneShowcaseItem from './objects/zoneShowcaseItem'
 
 export const schemaTypes = [
   // documents
@@ -18,4 +19,5 @@ export const schemaTypes = [
   weeklyHours,
   features,
   sponsorLogo,
+  zoneShowcaseItem,
 ]
