@@ -6,6 +6,12 @@ export default defineType({
   type: 'object',
   fields: [
     defineField({
+      name: 'parking',
+      title: 'Parqueadero',
+      type: 'boolean',
+      initialValue: false,
+    }),
+    defineField({
       name: 'petFriendly',
       title: 'Pet friendly',
       type: 'boolean',
@@ -20,6 +26,12 @@ export default defineType({
     defineField({
       name: 'tableService',
       title: 'Servicio a la mesa',
+      type: 'boolean',
+      initialValue: false,
+    }),
+    defineField({
+      name: 'creditCard',
+      title: 'Tarjeta de crédito',
       type: 'boolean',
       initialValue: false,
     }),

@@ -15,6 +15,9 @@ const restaurantProjection = `{
   instagram,
   hours,
   menus,
+  "menuHighlights": menuHighlights[]{ "icon": icon.asset->url, label },
+  youtubeVideoUrl,
+  vegetarianOption,
   features,
   "gallery": gallery[].asset->url,
   "relatedRestaurantSlugs": relatedRestaurants[]->slug.current

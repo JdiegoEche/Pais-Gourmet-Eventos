@@ -81,6 +81,25 @@ export default defineType({
       of: [defineArrayMember({type: 'menu'})],
     }),
     defineField({
+      name: 'menuHighlights',
+      title: 'Íconos del menú',
+      description: 'Íconos que resumen qué incluye el menú. Opcional y editable por restaurante.',
+      type: 'array',
+      of: [defineArrayMember({type: 'menuHighlight'})],
+    }),
+    defineField({
+      name: 'youtubeVideoUrl',
+      title: 'Video de YouTube',
+      description: 'Opcional. Se muestra junto al menú si se completa.',
+      type: 'url',
+    }),
+    defineField({
+      name: 'vegetarianOption',
+      title: 'Opción vegetariana',
+      type: 'boolean',
+      initialValue: false,
+    }),
+    defineField({
       name: 'features',
       title: 'Servicios',
       type: 'features',

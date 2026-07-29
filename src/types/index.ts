@@ -34,10 +34,17 @@ export interface Menu {
 }
 
 export interface RestaurantFeatures {
+  parking: boolean;
   petFriendly: boolean;
   delivery: boolean;
   tableService: boolean;
+  creditCard: boolean;
   paymentMethods: string[];
+}
+
+export interface MenuHighlight {
+  icon: string;
+  label: string;
 }
 
 export interface WeeklyHours {
@@ -59,6 +66,9 @@ export interface Restaurant {
   instagram?: string;
   hours: WeeklyHours[];
   menus: Menu[];
+  menuHighlights: MenuHighlight[];
+  youtubeVideoUrl?: string;
+  vegetarianOption: boolean;
   features: RestaurantFeatures;
   gallery: string[];
   relatedRestaurantSlugs: string[];

@@ -35,16 +35,31 @@ const dayLabels: Record<string, string> = {
 };
 
 const menuCategories = ['entrantes', 'fuerte', 'postre'] as const;
+
+function youtubeEmbedUrl(url?: string): string | null {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname.includes('youtu.be')) {
+      return `https://www.youtube.com/embed${parsed.pathname}`;
+    }
+    const videoId = parsed.searchParams.get('v');
+    if (videoId) return `https://www.youtube.com/embed/${videoId}`;
+    if (parsed.pathname.startsWith('/embed/')) return url;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+const videoEmbedUrl = youtubeEmbedUrl(restaurant.youtubeVideoUrl);
 ---
 
 <Layout title={restaurant.name}>
   <article class="restaurant-detail">
     <header class="restaurant-detail__header">
-      <div>
-        <h1>{restaurant.name}</h1>
-        <p class="restaurant-detail__meta">{restaurant.cuisineTypes.join(', ')} · {restaurant.zone}</p>
-      </div>
-      <ShareButtons title={restaurant.name} />
+      <h1>{restaurant.name}</h1>
+      <p class="restaurant-detail__meta">{restaurant.cuisineTypes.join(', ')} · {restaurant.zone}</p>
     </header>
 
     <PhotoGallery photos={restaurant.gallery} alt={restaurant.name} />
@@ -75,78 +90,121 @@ const menuCategories = ['entrantes', 'fuerte', 'postre'] as const;
       </button>
     </div>
 
-    <div
-      class="restaurant-detail__grid"
-      id="panel-info"
-      role="tabpanel"
-      aria-labelledby="tab-info"
-      data-tab-panel="info"
-    >
-      <section class="restaurant-detail__info">
-        <h2>Información</h2>
-        <p>{restaurant.address}</p>
-        <p><a href={`tel:${restaurant.phone}`}>{restaurant.phone}</a></p>
-        {restaurant.whatsapp && (
-          <p><a href={`https://wa.me/${restaurant.whatsapp}`} target="_blank" rel="noopener">WhatsApp</a></p>
-        )}
-        {restaurant.instagram && (
-          <p>
-            <a href={`https://instagram.com/${restaurant.instagram}`} target="_blank" rel="noopener">
-              @{restaurant.instagram}
-            </a>
-          </p>
-        )}
-
-        <ul class="restaurant-detail__features">
-          {restaurant.features.petFriendly && <li>Pet friendly</li>}
-          {restaurant.features.delivery && <li>Delivery</li>}
-          {restaurant.features.tableService && <li>Servicio a la mesa</li>}
-          {restaurant.features.paymentMethods.length > 0 && (
-            <li>Medios de pago: {restaurant.features.paymentMethods.join(', ')}</li>
-          )}
-        </ul>
-
-        <h2>Horarios</h2>
-        <ul class="restaurant-detail__hours">
-          {restaurant.hours.map((h) => (
-            <li>{dayLabels[h.day] ?? h.day}: {h.opens} – {h.closes}</li>
-          ))}
-        </ul>
-      </section>
-
-      <section class="restaurant-detail__menus">
-        <h2>Menús</h2>
-        {restaurant.menus.map((menu) => (
-          <div class="menu-card">
-            <div class="menu-card__header">
-              <h3>{menu.name}</h3>
-              <div class="menu-card__price">
-                {menu.previousPrice && (
-                  <span class="menu-card__price--before">${menu.previousPrice.toLocaleString('es-CO')}</span>
-                )}
-                <span class="menu-card__price--current">${menu.currentPrice.toLocaleString('es-CO')}</span>
-              </div>
-            </div>
-            {menuCategories.map((category) => {
-              const items = menu.items.filter((item) => item.category === category);
-              if (items.length === 0) return null;
-              return (
-                <div class="menu-card__category">
-                  <h4>{category}</h4>
-                  <ul>
-                    {items.map((item) => (
-                      <li>
-                        {item.name}
-                        {item.description && <span> — {item.description}</span>}
-                      </li>
-                    ))}
-                  </ul>
+    <div id="panel-info" role="tabpanel" aria-labelledby="tab-info" data-tab-panel="info">
+      <div class:list={['restaurant-detail__grid', !videoEmbedUrl && 'restaurant-detail__grid--no-video']}>
+        <section class="restaurant-detail__menus">
+          <h2>Menús</h2>
+          {restaurant.menus.map((menu) => (
+            <div class="menu-card">
+              <div class="menu-card__header">
+                <h3>{menu.name}</h3>
+                <div class="menu-card__price">
+                  {menu.previousPrice && (
+                    <span class="menu-card__price--before">${menu.previousPrice.toLocaleString('es-CO')}</span>
+                  )}
+                  <span class="menu-card__price--current">${menu.currentPrice.toLocaleString('es-CO')}</span>
                 </div>
-              );
-            })}
+              </div>
+              {menuCategories.map((category) => {
+                const items = menu.items.filter((item) => item.category === category);
+                if (items.length === 0) return null;
+                return (
+                  <div class="menu-card__category">
+                    <h4>{category}</h4>
+                    <ul>
+                      {items.map((item) => (
+                        <li>
+                          {item.name}
+                          {item.description && <span> — {item.description}</span>}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+
+          {restaurant.menuHighlights.length > 0 && (
+            <ul class="restaurant-detail__menu-highlights">
+              {restaurant.menuHighlights.map((highlight) => (
+                <li>
+                  <img src={highlight.icon} alt="" />
+                  <span>{highlight.label}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <div class="restaurant-detail__general-info">
+            <h2>Información general</h2>
+            <p>{restaurant.address}</p>
+            <p><a href={`tel:${restaurant.phone}`}>{restaurant.phone}</a></p>
+
+            <h3>Horarios</h3>
+            <ul class="restaurant-detail__hours">
+              {restaurant.hours.map((h) => (
+                <li>{dayLabels[h.day] ?? h.day}: {h.opens} – {h.closes}</li>
+              ))}
+            </ul>
           </div>
-        ))}
-      </section>
+        </section>
+
+        {videoEmbedUrl && (
+          <section class="restaurant-detail__video">
+            <div class="restaurant-detail__video-frame">
+              <iframe
+                src={videoEmbedUrl}
+                title={`Video de ${restaurant.name}`}
+                loading="lazy"
+                allowfullscreen
+              ></iframe>
+            </div>
+          </section>
+        )}
+      </div>
+
+      <div class="feature-section">
+        <div class="feature-item">
+          <h3>Características</h3>
+          <ul class="restaurant-detail__features">
+            {restaurant.features.parking && <li>Parqueadero</li>}
+            {restaurant.features.petFriendly && <li>Pet friendly</li>}
+            {restaurant.features.delivery && <li>Delivery</li>}
+            {restaurant.features.tableService && <li>Servicio a la mesa</li>}
+            {restaurant.features.creditCard && <li>Tarjeta de crédito</li>}
+          </ul>
+        </div>
+
+        <div class="feature-item">
+          <h3>Contacto</h3>
+          {restaurant.whatsapp && (
+            <p><a href={`https://wa.me/${restaurant.whatsapp}`} target="_blank" rel="noopener">WhatsApp</a></p>
+          )}
+          {restaurant.instagram && (
+            <p>
+              <a href={`https://instagram.com/${restaurant.instagram}`} target="_blank" rel="noopener">
+                @{restaurant.instagram}
+              </a>
+            </p>
+          )}
+          <ShareButtons title={restaurant.name} />
+        </div>
+
+        <div class="feature-item">
+          <h3>Opciones alimenticias</h3>
+          <ul class="restaurant-detail__features">
+            {restaurant.vegetarianOption && <li>Opción vegetariana</li>}
+          </ul>
+        </div>
+
+        <div class="feature-item">
+          <h3>Tipos de cocina</h3>
+          <ul class="restaurant-detail__features">
+            {restaurant.cuisineTypes.map((type) => <li>{type}</li>)}
+          </ul>
+        </div>
+      </div>
     </div>
 
     <section
@@ -183,13 +241,6 @@ const menuCategories = ['entrantes', 'fuerte', 'postre'] as const;
     flex-direction: column;
     gap: var(--spacing-lg);
   }
-  .restaurant-detail__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: var(--spacing-sm);
-    flex-wrap: wrap;
-  }
   .restaurant-detail__header h1 {
     color: var(--color-primary-dark);
     margin-bottom: 0.25rem;
@@ -224,8 +275,66 @@ const menuCategories = ['entrantes', 'fuerte', 'postre'] as const;
   }
   .restaurant-detail__grid {
     display: grid;
-    grid-template-columns: 1fr 1.4fr;
+    grid-template-columns: 1.4fr 1fr;
     gap: var(--spacing-lg);
+  }
+  .restaurant-detail__grid--no-video {
+    grid-template-columns: 1fr;
+  }
+  .restaurant-detail__menu-highlights {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+    margin: var(--spacing-sm) 0;
+  }
+  .restaurant-detail__menu-highlights li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    text-align: center;
+  }
+  .restaurant-detail__menu-highlights img {
+    width: 2.5rem;
+    height: 2.5rem;
+    object-fit: contain;
+  }
+  .restaurant-detail__general-info {
+    margin-top: var(--spacing-md);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--color-border);
+  }
+  .restaurant-detail__video-frame {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .restaurant-detail__video-frame iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+  .feature-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--spacing-md);
+  }
+  .feature-item {
+    padding: var(--spacing-sm);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+  }
+  .feature-item h3 {
+    margin: 0 0 0.5rem;
+    color: var(--color-primary-dark);
   }
   .restaurant-detail__features {
     list-style: none;

@@ -5,6 +5,7 @@ import review from './review'
 import features from './objects/features'
 import menu from './objects/menu'
 import menuItem from './objects/menuItem'
+import menuHighlight from './objects/menuHighlight'
 import sponsorLogo from './objects/sponsorLogo'
 import weeklyHours from './objects/weeklyHours'
 import zoneShowcaseItem from './objects/zoneShowcaseItem'
@@ -18,6 +19,7 @@ export const schemaTypes = [
   // objects
   menu,
   menuItem,
+  menuHighlight,
   weeklyHours,
   features,
   sponsorLogo,
