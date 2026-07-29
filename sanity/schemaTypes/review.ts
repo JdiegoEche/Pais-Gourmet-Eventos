@@ -1,4 +1,4 @@
-import {defineField, defineType} from 'sanity'
+import {defineArrayMember, defineField, defineType} from 'sanity'
 
 export default defineType({
   name: 'review',
@@ -68,6 +68,12 @@ export default defineType({
       type: 'datetime',
       validation: (Rule) => Rule.required(),
       initialValue: () => new Date().toISOString(),
+    }),
+    defineField({
+      name: 'replies',
+      title: 'Respuestas',
+      type: 'array',
+      of: [defineArrayMember({type: 'reviewReply'})],
     }),
   ],
   // Reseña pública, sin campo de moderación/aprobación: se publica directo al enviarse.

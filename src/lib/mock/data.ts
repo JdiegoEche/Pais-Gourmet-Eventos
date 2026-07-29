@@ -1,5 +1,7 @@
 import type { EventData, Restaurant, Review } from '../../types';
 
+type ReviewSeed = Omit<Review, 'id' | 'replies'>;
+
 export const mockEvent: EventData = {
   slug: 'pais-gourmet-demo',
   name: 'País Gourmet Demo',
@@ -250,7 +252,7 @@ export const mockRestaurants: Restaurant[] = [
   },
 ];
 
-export const mockReviewsSeed: Review[] = [
+export const mockReviewsSeed: ReviewSeed[] = [
   { restaurantSlug: 'la-tulpa-fuego-y-cafe', name: 'Camila R.', rating: 5, comment: 'El sancocho estaba espectacular, muy buena atención.', createdAt: '2026-07-10T18:30:00.000Z' },
   { restaurantSlug: 'la-tulpa-fuego-y-cafe', name: 'Julián M.', rating: 4, comment: 'Rico ambiente, aunque tardaron un poco con el postre.', createdAt: '2026-07-15T20:00:00.000Z' },
   { restaurantSlug: 'trattoria-girasol', name: 'Sofía T.', rating: 5, comment: 'El risotto de hongos es el mejor que probé en la ciudad.', createdAt: '2026-07-08T19:15:00.000Z' },

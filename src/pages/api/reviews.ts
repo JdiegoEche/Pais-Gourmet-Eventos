@@ -69,9 +69,9 @@ export const POST: APIRoute = async ({ request, url }) => {
       ambianceRating,
       comment: comment.trim(),
     });
-    const { name: publicName, rating: publicRating, foodRating: fr, serviceRating: sr, ambianceRating: ar, comment: publicComment, createdAt } = review;
+    const { id, name: publicName, rating: publicRating, foodRating: fr, serviceRating: sr, ambianceRating: ar, comment: publicComment, createdAt } = review;
     return new Response(
-      JSON.stringify({ name: publicName, rating: publicRating, foodRating: fr, serviceRating: sr, ambianceRating: ar, comment: publicComment, createdAt }),
+      JSON.stringify({ id, name: publicName, rating: publicRating, foodRating: fr, serviceRating: sr, ambianceRating: ar, comment: publicComment, createdAt, replies: [] }),
       { status: 201 }
     );
   } catch {
@@ -85,8 +85,9 @@ export const GET: APIRoute = async ({ url }) => {
     return new Response(JSON.stringify({ error: 'Falta el parámetro restaurant' }), { status: 400 });
   }
   const reviews = await getReviews(restaurantSlug);
-  // Nunca se exponen phone/email: son datos privados para la base de leads.
-  const publicReviews = reviews.map(({ name, rating, foodRating, serviceRating, ambianceRating, comment, createdAt }) => ({
+  // Nunca se exponen phone/email (ni de la reseña ni de sus respuestas): son datos privados para la base de leads.
+  const publicReviews = reviews.map(({ id, name, rating, foodRating, serviceRating, ambianceRating, comment, createdAt, replies }) => ({
+    id,
     name,
     rating,
     foodRating,
@@ -94,6 +95,7 @@ export const GET: APIRoute = async ({ url }) => {
     ambianceRating,
     comment,
     createdAt,
+    replies: replies.map(({ name, message, createdAt }) => ({ name, message, createdAt })),
   }));
   return new Response(JSON.stringify(publicReviews), { status: 200 });
 };

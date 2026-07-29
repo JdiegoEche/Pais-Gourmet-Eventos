@@ -28,6 +28,30 @@ function stars(value: number) {
           </p>
         )}
         <p>{review.comment}</p>
+
+        {review.replies.length > 0 && (
+          <ul class="review-list__replies">
+            {review.replies.map((reply) => (
+              <li>
+                <strong>{reply.name}</strong>
+                <p>{reply.message}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <button type="button" class="review-list__reply-toggle" data-reply-toggle={review.id}>Responder</button>
+
+        <form class="review-list__reply-form" data-reply-form={review.id} hidden>
+          <h4>Responder</h4>
+          <input type="text" name="name" placeholder="Tu nombre" required minlength="3" maxlength="30" />
+          <input type="tel" name="phone" placeholder="Tu celular" required />
+          <input type="email" name="email" placeholder="Tu email" required />
+          <p class="review-form__privacy">Tu celular y email no se publican, solo los usamos para contactarte.</p>
+          <textarea name="message" placeholder="Escribí tu respuesta" required maxlength="300"></textarea>
+          <button type="submit">Enviar respuesta</button>
+          <p class="review-list__reply-status" data-reply-status role="status"></p>
+        </form>
       </li>
     ))}
   </ul>
@@ -43,36 +67,122 @@ function stars(value: number) {
     flex-direction: column;
     gap: var(--spacing-sm);
   }
-  .review-list li {
+  /* El contenido de [data-review-list-items] se reemplaza por completo vía innerHTML en
+     refresh() (se llama siempre al montar), así que esos elementos nunca reciben el atributo
+     de scope de Astro. Todas las reglas que apuntan a ese contenido deben ser :global(). */
+  :global(.review-list li) {
     padding: var(--spacing-sm);
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
   }
-  .review-list__header {
+  :global(.review-list__header) {
     display: flex;
     justify-content: space-between;
     margin-bottom: 0.25rem;
   }
-  .review-list__rating {
+  :global(.review-list__rating) {
     color: var(--color-accent);
     letter-spacing: 0.1em;
   }
-  .review-list__breakdown {
+  :global(.review-list__breakdown) {
     margin: 0 0 0.25rem;
     font-size: 0.8rem;
     color: var(--color-text-muted);
   }
+  :global(.review-list__replies) {
+    margin: var(--spacing-xs) 0 0 var(--spacing-md);
+    padding-left: var(--spacing-sm);
+    border-left: 2px solid var(--color-border);
+  }
+  :global(.review-list__replies li) {
+    padding: 0.4rem 0;
+    background: none;
+    border: none;
+  }
+  :global(.review-list__reply-toggle) {
+    margin-top: var(--spacing-xs);
+    padding: 0.3rem 0.75rem;
+    background: none;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    color: var(--color-primary-dark);
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  :global(.review-list__reply-toggle):hover {
+    background: var(--color-accent);
+  }
+  :global(.review-list__reply-form) {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    margin-top: var(--spacing-sm);
+    padding: var(--spacing-md);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+  }
+  :global(.review-list__reply-form[hidden]) {
+    display: none;
+  }
+  :global(.review-list__reply-form h4) {
+    margin: 0 0 0.25rem;
+    color: var(--color-primary-dark);
+  }
+  :global(.review-list__reply-form .review-form__privacy) {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+  }
+  :global(.review-list__reply-form input),
+  :global(.review-list__reply-form textarea) {
+    padding: 0.6rem;
+    border: 1px solid var(--color-border);
+    border-radius: calc(var(--radius) / 2);
+    font: inherit;
+  }
+  :global(.review-list__reply-form button[type='submit']) {
+    align-self: flex-start;
+    padding: 0.6rem 1.5rem;
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-weight: 600;
+    cursor: pointer;
+  }
+  :global(.review-list__reply-form button[type='submit']):hover {
+    background: var(--color-primary-dark);
+  }
+  :global(.review-list__reply-status) {
+    margin: 0;
+    font-size: 0.85rem;
+    min-height: 1.1em;
+  }
+  :global(.review-list__reply-status[data-state='success']) {
+    color: #2f7a3d;
+  }
+  :global(.review-list__reply-status[data-state='error']) {
+    color: #b3261e;
+  }
 </style>
 
 <script>
+  interface ReplyDTO {
+    name: string;
+    message: string;
+  }
+
   interface ReviewDTO {
+    id: string;
     name: string;
     rating: number;
     foodRating?: number;
     serviceRating?: number;
     ambianceRating?: number;
     comment: string;
+    replies: ReplyDTO[];
   }
 
   const container = document.querySelector<HTMLElement>('[data-review-list]');
@@ -99,6 +209,11 @@ function stars(value: number) {
         const breakdown = review.foodRating && review.serviceRating && review.ambianceRating
           ? `<p class="review-list__breakdown">Comida ${stars(review.foodRating)} · Servicio ${stars(review.serviceRating)} · Ambiente ${stars(review.ambianceRating)}</p>`
           : '';
+        const replies = review.replies.length > 0
+          ? `<ul class="review-list__replies">${review.replies
+              .map((reply) => `<li><strong>${escapeHtml(reply.name)}</strong><p>${escapeHtml(reply.message)}</p></li>`)
+              .join('')}</ul>`
+          : '';
         return `
           <li>
             <div class="review-list__header">
@@ -107,6 +222,18 @@ function stars(value: number) {
             </div>
             ${breakdown}
             <p>${escapeHtml(review.comment)}</p>
+            ${replies}
+            <button type="button" class="review-list__reply-toggle" data-reply-toggle="${review.id}">Responder</button>
+            <form class="review-list__reply-form" data-reply-form="${review.id}" hidden>
+              <h4>Responder</h4>
+              <input type="text" name="name" placeholder="Tu nombre" required minlength="3" maxlength="30" />
+              <input type="tel" name="phone" placeholder="Tu celular" required />
+              <input type="email" name="email" placeholder="Tu email" required />
+              <p class="review-form__privacy">Tu celular y email no se publican, solo los usamos para contactarte.</p>
+              <textarea name="message" placeholder="Escribí tu respuesta" required maxlength="300"></textarea>
+              <button type="submit">Enviar respuesta</button>
+              <p class="review-list__reply-status" data-reply-status role="status"></p>
+            </form>
           </li>
         `;
       })
@@ -124,6 +251,52 @@ function stars(value: number) {
   document.addEventListener('review:created', (event) => {
     const detail = (event as CustomEvent<{ restaurantSlug: string }>).detail;
     if (detail?.restaurantSlug === restaurantSlug) refresh();
+  });
+
+  container?.addEventListener('click', (event) => {
+    const button = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-reply-toggle]');
+    if (!button) return;
+    const reviewId = button.dataset.replyToggle;
+    const form = container.querySelector<HTMLFormElement>(`[data-reply-form="${reviewId}"]`);
+    if (form) form.hidden = !form.hidden;
+  });
+
+  container?.addEventListener('submit', async (event) => {
+    const form = (event.target as HTMLElement).closest<HTMLFormElement>('[data-reply-form]');
+    if (!form) return;
+    event.preventDefault();
+
+    const reviewId = form.dataset.replyForm;
+    const status = form.querySelector<HTMLParagraphElement>('[data-reply-status]');
+    const formData = new FormData(form);
+
+    try {
+      const response = await fetch('/api/review-replies', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reviewId,
+          name: formData.get('name'),
+          phone: formData.get('phone'),
+          email: formData.get('email'),
+          message: formData.get('message'),
+        }),
+      });
+
+      if (!response.ok) throw new Error('request failed');
+
+      form.reset();
+      if (status) {
+        status.textContent = '¡Gracias por tu respuesta!';
+        status.dataset.state = 'success';
+      }
+      document.dispatchEvent(new CustomEvent('review:created', { detail: { restaurantSlug } }));
+    } catch {
+      if (status) {
+        status.textContent = 'No pudimos publicar tu respuesta. Intentá de nuevo.';
+        status.dataset.state = 'error';
+      }
+    }
   });
 
   refresh();

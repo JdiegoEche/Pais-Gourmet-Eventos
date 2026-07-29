@@ -71,7 +71,18 @@ export interface Restaurant {
   relatedRestaurantSlugs: string[];
 }
 
+export interface ReviewReply {
+  name: string;
+  // Mismo criterio de privacidad que en Review: se piden para poder contactar a quien dejó
+  // la reseña original, pero nunca se exponen por la API pública ni se muestran en el sitio.
+  phone?: string;
+  email?: string;
+  message: string;
+  createdAt: string;
+}
+
 export interface Review {
+  id: string;
   restaurantSlug: string;
   name: string;
   // Datos de contacto privados: se piden en el formulario para alimentar la base de datos
@@ -84,6 +95,7 @@ export interface Review {
   ambianceRating?: 1 | 2 | 3 | 4 | 5;
   comment: string;
   createdAt: string;
+  replies: ReviewReply[];
 }
 
 export interface LeadSignup {
