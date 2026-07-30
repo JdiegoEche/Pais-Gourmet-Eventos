@@ -17,7 +17,7 @@ const { event } = Astro.props;
       type="search"
       name="q"
       class="event-hero__search-input"
-      placeholder="Buscar restaurante..."
+      placeholder="Biftek, GABO..."
       aria-label="Buscar restaurante"
     />
     <button type="submit" class="event-hero__cta">Buscar o ver restaurantes participantes</button>
@@ -26,13 +26,15 @@ const { event } = Astro.props;
 
 <style>
   .event-hero {
+    max-width: 1100px;
+    margin: var(--spacing-lg) auto;
     padding: var(--spacing-xl) var(--spacing-md);
     text-align: center;
     background:
       linear-gradient(180deg, rgba(20, 14, 8, 0.6), rgba(20, 14, 8, 0.6)),
       url('https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1600&h=800&fit=crop') center / cover
         no-repeat;
-    border-bottom: 1px solid var(--color-border);
+    border-radius: var(--radius);
   }
   .event-hero h1 {
     font-size: clamp(2rem, 5vw, 3rem);
