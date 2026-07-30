@@ -16,6 +16,7 @@ const cheapestMenu = [...restaurant.menus].sort((a, b) => a.currentPrice - b.cur
   data-restaurant-card
   data-cuisine={restaurant.cuisineTypes.join('|')}
   data-zone={restaurant.zone}
+  data-name={restaurant.name}
 >
   <div class="restaurant-card__image">
     <img src={thumb(restaurant.gallery[0], 480)} alt={restaurant.name} loading="lazy" />

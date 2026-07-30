@@ -12,23 +12,35 @@ const { event } = Astro.props;
   <h1>{event.name}</h1>
   <p class="event-hero__dates">{event.startDate} — {event.endDate}</p>
   <p class="event-hero__description">{event.whatIncludes}</p>
-  <a class="event-hero__cta" href="/restaurantes-participantes">Ver restaurantes participantes</a>
+  <form class="event-hero__search" action="/restaurantes-participantes" method="get">
+    <input
+      type="search"
+      name="q"
+      class="event-hero__search-input"
+      placeholder="Buscar restaurante..."
+      aria-label="Buscar restaurante"
+    />
+    <button type="submit" class="event-hero__cta">Buscar o ver restaurantes participantes</button>
+  </form>
 </section>
 
 <style>
   .event-hero {
     padding: var(--spacing-xl) var(--spacing-md);
     text-align: center;
-    background: linear-gradient(180deg, var(--color-surface), var(--color-bg));
+    background:
+      linear-gradient(180deg, rgba(20, 14, 8, 0.6), rgba(20, 14, 8, 0.6)),
+      url('https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1600&h=800&fit=crop') center / cover
+        no-repeat;
     border-bottom: 1px solid var(--color-border);
   }
   .event-hero h1 {
     font-size: clamp(2rem, 5vw, 3rem);
-    color: var(--color-primary-dark);
+    color: white;
     margin: 0 0 var(--spacing-xs);
   }
   .event-hero__dates {
-    color: var(--color-text-muted);
+    color: rgba(255, 255, 255, 0.85);
     font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -37,17 +49,34 @@ const { event } = Astro.props;
   .event-hero__description {
     max-width: 640px;
     margin: 0 auto var(--spacing-md);
-    color: var(--color-text);
+    color: rgba(255, 255, 255, 0.95);
     line-height: 1.6;
+  }
+  .event-hero__search {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    max-width: 480px;
+    margin: 0 auto;
+  }
+  .event-hero__search-input {
+    flex: 1 1 220px;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    font-size: 1rem;
   }
   .event-hero__cta {
     display: inline-block;
     padding: 0.75rem 1.75rem;
     background: var(--color-primary);
     color: white;
+    border: none;
     border-radius: var(--radius);
-    text-decoration: none;
     font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
     transition: background 0.2s ease;
   }
   .event-hero__cta:hover {
