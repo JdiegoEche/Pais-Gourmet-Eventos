@@ -47,10 +47,9 @@ export default defineType({
     defineField({
       name: 'priceRanges',
       title: 'Rangos de precio',
-      description: 'Usados como filtro, ej. "$85k - $105k para 2 personas"',
+      description: 'Mosaico de rangos de precio con foto de un plato representativo (home)',
       type: 'array',
-      of: [{type: 'string'}],
-      options: {layout: 'tags'},
+      of: [defineArrayMember({type: 'priceRangeItem'})],
     }),
     defineField({
       name: 'zones',

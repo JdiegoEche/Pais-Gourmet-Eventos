@@ -10,7 +10,11 @@ export const mockEvent: EventData = {
   whatIncludes:
     'Un mes de menús exclusivos a precio fijo en los mejores restaurantes del Eje Cafetero, pensados para compartir en pareja o en grupo.',
   whatIncludesImage: 'https://picsum.photos/seed/what-includes/900/500',
-  priceRanges: ['$45.000 - $65.000', '$65.000 - $85.000', '$85.000 - $110.000'],
+  priceRanges: [
+    { range: '$45.000 - $65.000', imageUrl: 'https://picsum.photos/seed/price-45-65/600/400' },
+    { range: '$65.000 - $85.000', imageUrl: 'https://picsum.photos/seed/price-65-85/600/400' },
+    { range: '$85.000 - $110.000', imageUrl: 'https://picsum.photos/seed/price-85-110/600/400' },
+  ],
   zones: ['Armenia', 'Pereira', 'Manizales'],
   zoneShowcase: [
     { name: 'Armenia', imageUrl: 'https://picsum.photos/seed/zone-armenia/600/400' },

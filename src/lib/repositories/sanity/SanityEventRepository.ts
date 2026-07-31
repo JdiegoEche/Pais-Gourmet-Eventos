@@ -12,7 +12,7 @@ export class SanityEventRepository implements EventRepository {
         endDate,
         whatIncludes,
         "whatIncludesImage": whatIncludesImage.asset->url,
-        priceRanges,
+        "priceRanges": priceRanges[]{"range": range, "imageUrl": image.asset->url},
         zones,
         "zoneShowcase": zoneShowcase[]{name, "imageUrl": image.asset->url},
         "featuredRestaurantSlugs": featuredRestaurants[]->slug.current,

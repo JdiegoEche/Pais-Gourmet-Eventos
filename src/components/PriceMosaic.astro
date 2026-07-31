@@ -1,6 +1,9 @@
 ---
+import type { PriceRangeItem } from '../types';
+import { thumb } from '../lib/image';
+
 interface Props {
-  priceRanges: string[];
+  priceRanges: PriceRangeItem[];
 }
 
 const { priceRanges } = Astro.props;
@@ -10,9 +13,10 @@ const { priceRanges } = Astro.props;
   <section class="price-mosaic">
     <h2>Restaurantes por precio</h2>
     <div class="price-mosaic__grid">
-      {priceRanges.map((range) => (
+      {priceRanges.map((item) => (
         <a class="price-mosaic__tile" href="/restaurantes-participantes">
-          {range}
+          <img src={thumb(item.imageUrl, 500)} alt={item.range} loading="lazy" />
+          <span>{item.range}</span>
         </a>
       ))}
     </div>
@@ -34,20 +38,25 @@ const { priceRanges } = Astro.props;
     gap: var(--spacing-md);
   }
   .price-mosaic__tile {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: var(--spacing-lg) var(--spacing-md);
-    background: var(--color-primary);
-    color: white;
+    position: relative;
+    display: block;
+    aspect-ratio: 4 / 3;
     border-radius: var(--radius);
+    overflow: hidden;
     text-decoration: none;
+  }
+  .price-mosaic__tile img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .price-mosaic__tile span {
+    position: absolute;
+    inset: auto 0 0 0;
+    padding: var(--spacing-sm);
+    background: linear-gradient(180deg, transparent, rgba(20, 14, 8, 0.75));
+    color: white;
     font-weight: 700;
     font-size: 1.1rem;
-    text-align: center;
-    transition: background 0.2s ease;
-  }
-  .price-mosaic__tile:hover {
-    background: var(--color-primary-dark);
   }
 </style>

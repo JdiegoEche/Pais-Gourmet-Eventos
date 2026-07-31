@@ -5,7 +5,7 @@ export interface EventData {
   endDate: string;
   whatIncludes: string;
   whatIncludesImage: string;
-  priceRanges: string[];
+  priceRanges: PriceRangeItem[];
   zones: string[];
   zoneShowcase: ZoneShowcaseItem[];
   featuredRestaurantSlugs: string[];
@@ -17,6 +17,11 @@ export interface EventData {
 
 export interface ZoneShowcaseItem {
   name: string;
+  imageUrl: string;
+}
+
+export interface PriceRangeItem {
+  range: string;
   imageUrl: string;
 }
 

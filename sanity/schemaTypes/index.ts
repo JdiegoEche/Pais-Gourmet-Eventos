@@ -9,6 +9,7 @@ import menuHighlight from './objects/menuHighlight'
 import reviewReply from './objects/reviewReply'
 import sponsorLogo from './objects/sponsorLogo'
 import zoneShowcaseItem from './objects/zoneShowcaseItem'
+import priceRangeItem from './objects/priceRangeItem'
 
 export const schemaTypes = [
   // documents
@@ -24,4 +25,5 @@ export const schemaTypes = [
   features,
   sponsorLogo,
   zoneShowcaseItem,
+  priceRangeItem,
 ]
