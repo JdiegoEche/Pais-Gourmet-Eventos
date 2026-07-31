@@ -12,6 +12,7 @@
   --font-body: system-ui, -apple-system, 'Segoe UI', sans-serif;
 
   --radius: 12px;
+  --header-height: 64px;
   --spacing-xs: 0.5rem;
   --spacing-sm: 1rem;
   --spacing-md: 1.5rem;

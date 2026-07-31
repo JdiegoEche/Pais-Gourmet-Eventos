@@ -9,7 +9,8 @@ interface Props {
 const { cuisineTypes, zones, deliveryZones, priceRanges } = Astro.props;
 ---
 
-<aside class="restaurant-filters">
+<aside class="restaurant-filters-outer">
+ <div class="restaurant-filters">
   <div class="restaurant-filters__bar">
     <div class="restaurant-filters__field restaurant-filters__search-field">
       <label for="filter-search" class="restaurant-filters__search-label">Buscar restaurante</label>
@@ -96,6 +97,7 @@ const { cuisineTypes, zones, deliveryZones, priceRanges } = Astro.props;
 
     <button type="button" data-filters-clear>Limpiar filtros</button>
   </form>
+ </div>
 </aside>
 
 <style>
@@ -107,9 +109,9 @@ const { cuisineTypes, zones, deliveryZones, priceRanges } = Astro.props;
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
-    align-self: flex-start;
     position: sticky;
-    top: var(--spacing-md);
+    top: calc(var(--header-height) + var(--spacing-xs));
+    z-index: 10;
   }
   .restaurant-filters__bar {
     display: flex;
