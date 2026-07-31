@@ -22,7 +22,21 @@ const siteName = event?.name ?? 'País Gourmet';
   <body>
     <header class="site-header">
       <a class="site-header__brand" href="/">{siteName}</a>
-      <nav>
+      <button
+        type="button"
+        class="site-header__toggle"
+        data-nav-toggle
+        aria-expanded="false"
+        aria-controls="site-nav"
+        aria-label="Abrir menú"
+      >
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+      <nav id="site-nav" data-site-nav>
         <a href="/">Inicio</a>
         <a href="/restaurantes-participantes">Restaurantes participantes</a>
       </nav>
@@ -38,6 +52,7 @@ const siteName = event?.name ?? 'País Gourmet';
 
 <style>
   .site-header {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -52,6 +67,9 @@ const siteName = event?.name ?? 'País Gourmet';
     color: var(--color-primary-dark);
     text-decoration: none;
   }
+  .site-header__toggle {
+    display: none;
+  }
   .site-header nav {
     display: flex;
     gap: var(--spacing-md);
@@ -64,6 +82,35 @@ const siteName = event?.name ?? 'País Gourmet';
   .site-header nav a:hover {
     color: var(--color-primary);
   }
+
+  @media (max-width: 678px) {
+    .site-header__toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 0.4rem;
+      color: var(--color-text);
+      cursor: pointer;
+    }
+    .site-header nav {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      flex-direction: column;
+      gap: var(--spacing-sm);
+      padding: var(--spacing-sm) var(--spacing-md);
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .site-header nav.site-header__nav--open {
+      display: flex;
+    }
+  }
   .site-footer {
     padding: var(--spacing-md);
     text-align: center;
@@ -71,3 +118,12 @@ const siteName = event?.name ?? 'País Gourmet';
     font-size: 0.85rem;
   }
 </style>
+
+<script>
+  const toggle = document.querySelector<HTMLButtonElement>('[data-nav-toggle]');
+  const nav = document.querySelector<HTMLElement>('[data-site-nav]');
+  toggle?.addEventListener('click', () => {
+    const isOpen = nav?.classList.toggle('site-header__nav--open') ?? false;
+    toggle.setAttribute('aria-expanded', String(isOpen));
+  });
+</script>
