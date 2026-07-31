@@ -33,13 +33,16 @@ const { priceRanges } = Astro.props;
     color: var(--color-primary-dark);
   }
   .price-mosaic__grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: var(--spacing-md);
   }
   .price-mosaic__tile {
     position: relative;
     display: block;
+    flex: 1 1 220px;
+    max-width: 280px;
     aspect-ratio: 4 / 3;
     border-radius: var(--radius);
     overflow: hidden;

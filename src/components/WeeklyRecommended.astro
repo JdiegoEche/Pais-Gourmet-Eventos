@@ -28,8 +28,13 @@ const { restaurants } = Astro.props;
     color: var(--color-primary-dark);
   }
   .weekly-recommended__grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: var(--spacing-md);
+  }
+  .weekly-recommended__grid > :global(*) {
+    flex: 1 1 260px;
+    max-width: 320px;
   }
 </style>
