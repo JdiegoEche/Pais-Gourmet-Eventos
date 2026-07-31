@@ -34,6 +34,9 @@ function stars(value: number) {
             {review.replies.map((reply) => (
               <li>
                 <strong>{reply.name}</strong>
+                <span class="review-list__unverified" title="Cualquier persona puede publicar una respuesta; el restaurante todavía no tiene una cuenta verificada.">
+                  Titular de la respuesta no verificado
+                </span>
                 <p>{reply.message}</p>
               </li>
             ))}
@@ -99,6 +102,20 @@ function stars(value: number) {
     padding: 0.4rem 0;
     background: none;
     border: none;
+  }
+  :global(.review-list__unverified) {
+    display: inline-block;
+    margin-left: 0.5rem;
+    padding: 0.1rem 0.5rem;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    color: var(--color-text-muted);
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    vertical-align: middle;
   }
   :global(.review-list__reply-toggle) {
     margin-top: var(--spacing-xs);
@@ -211,7 +228,10 @@ function stars(value: number) {
           : '';
         const replies = review.replies.length > 0
           ? `<ul class="review-list__replies">${review.replies
-              .map((reply) => `<li><strong>${escapeHtml(reply.name)}</strong><p>${escapeHtml(reply.message)}</p></li>`)
+              .map(
+                (reply) =>
+                  `<li><strong>${escapeHtml(reply.name)}</strong><span class="review-list__unverified" title="Cualquier persona puede publicar una respuesta; el restaurante todavía no tiene una cuenta verificada.">Titular de la respuesta no verificado</span><p>${escapeHtml(reply.message)}</p></li>`
+              )
               .join('')}</ul>`
           : '';
         return `
