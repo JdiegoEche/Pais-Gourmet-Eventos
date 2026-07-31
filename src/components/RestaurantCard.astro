@@ -11,6 +11,7 @@ const cheapestMenu = [...restaurant.menus].sort((a, b) => a.currentPrice - b.cur
 const activeFeatures = Object.entries(restaurant.features)
   .filter(([key, value]) => key !== 'paymentMethods' && value === true)
   .map(([key]) => key);
+const galleryUrls = restaurant.gallery.map((url) => thumb(url, 480));
 ---
 
 <a
@@ -25,8 +26,22 @@ const activeFeatures = Object.entries(restaurant.features)
   data-features={activeFeatures.join('|')}
   data-name={restaurant.name}
 >
-  <div class="restaurant-card__image">
-    <img src={thumb(restaurant.gallery[0], 480)} alt={restaurant.name} loading="lazy" />
+  <div class="restaurant-card__image" data-carousel data-gallery={galleryUrls.join('|')}>
+    <img src={galleryUrls[0]} alt={restaurant.name} loading="lazy" data-carousel-img />
+    {galleryUrls.length > 1 && (
+      <>
+        <button type="button" class="restaurant-card__nav restaurant-card__nav--prev" data-carousel-prev aria-label="Foto anterior">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+        <button type="button" class="restaurant-card__nav restaurant-card__nav--next" data-carousel-next aria-label="Foto siguiente">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </>
+    )}
   </div>
   <div class="restaurant-card__body">
     <h3>{restaurant.name}</h3>
@@ -56,6 +71,7 @@ const activeFeatures = Object.entries(restaurant.features)
     display: none;
   }
   .restaurant-card__image {
+    position: relative;
     aspect-ratio: 1 / 1;
     overflow: hidden;
   }
@@ -63,6 +79,35 @@ const activeFeatures = Object.entries(restaurant.features)
     width: 100%;
     height: 100%;
     object-fit: cover;
+  }
+  .restaurant-card__nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: none;
+    border-radius: 50%;
+    background: rgba(20, 14, 8, 0.55);
+    color: white;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s ease, background 0.2s ease;
+  }
+  .restaurant-card__nav:hover {
+    background: rgba(20, 14, 8, 0.8);
+  }
+  .restaurant-card__image:hover .restaurant-card__nav {
+    opacity: 1;
+  }
+  .restaurant-card__nav--prev {
+    left: 0.5rem;
+  }
+  .restaurant-card__nav--next {
+    right: 0.5rem;
   }
   .restaurant-card__body {
     padding: var(--spacing-sm);
@@ -82,3 +127,28 @@ const activeFeatures = Object.entries(restaurant.features)
     color: var(--color-primary);
   }
 </style>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-carousel]').forEach((carousel) => {
+    const gallery = carousel.dataset.gallery?.split('|') ?? [];
+    const img = carousel.querySelector<HTMLImageElement>('[data-carousel-img]');
+    if (!img || gallery.length < 2) return;
+
+    let index = 0;
+    function show(next: number) {
+      index = (next + gallery.length) % gallery.length;
+      if (img) img.src = gallery[index];
+    }
+
+    carousel.querySelector('[data-carousel-prev]')?.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      show(index - 1);
+    });
+    carousel.querySelector('[data-carousel-next]')?.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      show(index + 1);
+    });
+  });
+</script>
