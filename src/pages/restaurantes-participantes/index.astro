@@ -14,7 +14,6 @@ const priceRanges = event?.priceRanges.map((p) => p.range) ?? [];
 
 <Layout title="Restaurantes participantes">
   <section class="restaurant-listing">
-    <h1>Restaurantes participantes</h1>
     <div class="restaurant-listing__layout">
       <RestaurantFilters
         cuisineTypes={cuisineTypes}
@@ -37,11 +36,8 @@ const priceRanges = event?.priceRanges.map((p) => p.range) ?? [];
 <style>
   .restaurant-listing {
     padding: var(--spacing-lg) var(--spacing-md);
-    max-width: 1300px;
+    max-width: 1600px;
     margin: 0 auto;
-  }
-  .restaurant-listing h1 {
-    color: var(--color-primary-dark);
   }
   .restaurant-listing__layout {
     display: flex;
@@ -50,6 +46,7 @@ const priceRanges = event?.priceRanges.map((p) => p.range) ?? [];
   }
   .restaurant-listing__layout > :global(aside) {
     flex: 0 0 260px;
+    min-height: 100vh;
   }
   .restaurant-listing__main {
     flex: 1;
@@ -61,7 +58,7 @@ const priceRanges = event?.priceRanges.map((p) => p.range) ?? [];
   }
   .restaurant-listing__grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: var(--spacing-md);
   }
   @media (max-width: 768px) {
@@ -71,7 +68,14 @@ const priceRanges = event?.priceRanges.map((p) => p.range) ?? [];
     .restaurant-listing__layout > :global(aside) {
       flex-basis: auto;
       width: 100%;
+      min-height: 0;
       position: static;
+    }
+  }
+  @media (max-width: 600px) {
+    .restaurant-listing__grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--spacing-sm);
     }
   }
 </style>
