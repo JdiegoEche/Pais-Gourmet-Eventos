@@ -47,6 +47,14 @@ export default defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
+      name: 'deliveryZones',
+      title: 'Zonas a domicilio',
+      description: 'Zonas a las que este restaurante hace entregas a domicilio',
+      type: 'array',
+      of: [{type: 'string'}],
+      options: {layout: 'tags'},
+    }),
+    defineField({
       name: 'address',
       title: 'Dirección',
       type: 'string',

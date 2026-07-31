@@ -2,62 +2,140 @@
 interface Props {
   cuisineTypes: string[];
   zones: string[];
+  deliveryZones: string[];
+  priceRanges: string[];
 }
 
-const { cuisineTypes, zones } = Astro.props;
+const { cuisineTypes, zones, deliveryZones, priceRanges } = Astro.props;
 ---
 
-<form class="restaurant-filters" data-filters>
-  <fieldset>
-    <legend>Tipo de comida</legend>
-    {cuisineTypes.map((type) => (
-      <label>
-        <input type="checkbox" name="cuisine" value={type} />
-        {type}
-      </label>
-    ))}
-  </fieldset>
+<aside class="restaurant-filters">
+  <form data-filters>
+    <div class="restaurant-filters__field">
+      <label for="filter-search">Buscar restaurante</label>
+      <input type="search" id="filter-search" name="q" placeholder="Biftek, GABO..." data-filter-search />
+    </div>
 
-  <fieldset>
-    <legend>Zona</legend>
-    {zones.map((zone) => (
-      <label>
-        <input type="checkbox" name="zone" value={zone} />
-        {zone}
-      </label>
-    ))}
-  </fieldset>
+    <div class="restaurant-filters__field">
+      <label for="filter-price">Valor del menú para 2 personas</label>
+      <select id="filter-price" name="priceRange" data-filter-price>
+        <option value="">Todos</option>
+        {priceRanges.map((range) => <option value={range}>{range}</option>)}
+      </select>
+    </div>
 
-  <button type="button" data-filters-clear>Limpiar filtros</button>
-</form>
+    <div class="restaurant-filters__field">
+      <label for="filter-zone">Restaurantes por zonas</label>
+      <select id="filter-zone" name="zone" data-filter-zone>
+        <option value="">Todas</option>
+        {zones.map((zone) => <option value={zone}>{zone}</option>)}
+      </select>
+    </div>
+
+    <div class="restaurant-filters__field">
+      <label for="filter-delivery-zone">Zonas a domicilio</label>
+      <select id="filter-delivery-zone" name="deliveryZone" data-filter-delivery-zone>
+        <option value="">Todas</option>
+        {deliveryZones.map((zone) => <option value={zone}>{zone}</option>)}
+      </select>
+    </div>
+
+    <div class="restaurant-filters__field">
+      <label for="filter-cuisine">Tipo de comida</label>
+      <select id="filter-cuisine" name="cuisine" data-filter-cuisine>
+        <option value="">Todos</option>
+        {cuisineTypes.map((type) => <option value={type}>{type}</option>)}
+      </select>
+    </div>
+
+    <fieldset>
+      <legend>Opciones alimenticias</legend>
+      <label>
+        <input type="checkbox" name="vegetarian" value="true" />
+        Menú con opción vegetariana
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Características del restaurante</legend>
+      <label>
+        <input type="checkbox" name="feature" value="parking" />
+        Parqueadero
+      </label>
+      <label>
+        <input type="checkbox" name="feature" value="petFriendly" />
+        Petfriendly
+      </label>
+      <label>
+        <input type="checkbox" name="feature" value="delivery" />
+        Servicio a domicilio
+      </label>
+      <label>
+        <input type="checkbox" name="feature" value="tableService" />
+        Atención en mesa
+      </label>
+      <label>
+        <input type="checkbox" name="feature" value="creditCard" />
+        Tarjeta crédito/débito
+      </label>
+    </fieldset>
+
+    <button type="button" data-filters-clear>Limpiar filtros</button>
+  </form>
+</aside>
 
 <style>
   .restaurant-filters {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: var(--spacing-md);
-    align-items: flex-end;
-    padding: var(--spacing-sm) var(--spacing-md);
+    padding: var(--spacing-md);
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
-    margin-bottom: var(--spacing-md);
+    align-self: flex-start;
+    position: sticky;
+    top: var(--spacing-md);
+  }
+  .restaurant-filters form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+  .restaurant-filters__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+  .restaurant-filters__field > label:first-child {
+    font-weight: 700;
+    color: var(--color-primary-dark);
+  }
+  .restaurant-filters__field input[type='search'],
+  .restaurant-filters__field select {
+    padding: 0.5rem 0.6rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    font-size: 0.9rem;
   }
   .restaurant-filters fieldset {
     border: none;
     padding: 0;
     margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
   }
   .restaurant-filters legend {
     font-weight: 700;
     color: var(--color-primary-dark);
     margin-bottom: 0.25rem;
+    padding: 0;
   }
   .restaurant-filters label {
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    margin-right: 0.75rem;
     font-size: 0.9rem;
     color: var(--color-text);
   }
@@ -75,6 +153,7 @@ const { cuisineTypes, zones } = Astro.props;
   const form = document.querySelector<HTMLFormElement>('[data-filters]');
   const grid = document.querySelector<HTMLElement>('[data-restaurant-grid]');
   const counter = document.querySelector<HTMLElement>('[data-results-count]');
+  const searchInput = document.querySelector<HTMLInputElement>('[data-filter-search]');
   const cards = grid ? Array.from(grid.querySelectorAll<HTMLElement>('[data-restaurant-card]')) : [];
 
   function normalize(value: string): string {
@@ -84,27 +163,54 @@ const { cuisineTypes, zones } = Astro.props;
       .replace(/[̀-ͯ]/g, '');
   }
 
+  function parsePriceRange(range: string): { min: number; max: number } | null {
+    const numbers = range.match(/[\d.]+/g)?.map((n) => Number(n.replace(/\./g, '')));
+    if (!numbers || numbers.length < 2) return null;
+    return { min: numbers[0], max: numbers[1] };
+  }
+
   const initialParams = new URLSearchParams(window.location.search);
   let searchQuery = normalize(initialParams.get('q') ?? '');
+  if (searchInput) searchInput.value = initialParams.get('q') ?? '';
 
   function applyFilters() {
     if (!form) return;
-    const cuisines = Array.from(
-      form.querySelectorAll<HTMLInputElement>('input[name="cuisine"]:checked')
-    ).map((el) => el.value);
-    const zones = Array.from(form.querySelectorAll<HTMLInputElement>('input[name="zone"]:checked')).map(
+    const cuisine = form.querySelector<HTMLSelectElement>('[data-filter-cuisine]')?.value ?? '';
+    const zone = form.querySelector<HTMLSelectElement>('[data-filter-zone]')?.value ?? '';
+    const deliveryZone = form.querySelector<HTMLSelectElement>('[data-filter-delivery-zone]')?.value ?? '';
+    const features = Array.from(form.querySelectorAll<HTMLInputElement>('input[name="feature"]:checked')).map(
       (el) => el.value
     );
+    const vegetarianOnly = form.querySelector<HTMLInputElement>('input[name="vegetarian"]')?.checked ?? false;
+    const priceRangeValue = form.querySelector<HTMLSelectElement>('[data-filter-price]')?.value ?? '';
+    const priceRange = priceRangeValue ? parsePriceRange(priceRangeValue) : null;
 
     let visible = 0;
     cards.forEach((card) => {
       const cardCuisines = card.dataset.cuisine?.split('|') ?? [];
       const cardZone = card.dataset.zone ?? '';
+      const cardDeliveryZones = card.dataset.deliveryZones ? card.dataset.deliveryZones.split('|') : [];
+      const cardFeatures = card.dataset.features ? card.dataset.features.split('|') : [];
+      const cardPrices = card.dataset.prices ? card.dataset.prices.split('|').map(Number) : [];
+      const cardVegetarian = card.dataset.vegetarian === 'true';
       const cardName = normalize(card.dataset.name ?? '');
-      const matchesCuisine = cuisines.length === 0 || cuisines.some((c) => cardCuisines.includes(c));
-      const matchesZone = zones.length === 0 || zones.includes(cardZone);
+
+      const matchesCuisine = !cuisine || cardCuisines.includes(cuisine);
+      const matchesZone = !zone || cardZone === zone;
+      const matchesDeliveryZone = !deliveryZone || cardDeliveryZones.includes(deliveryZone);
+      const matchesFeatures = features.every((f) => cardFeatures.includes(f));
+      const matchesVegetarian = !vegetarianOnly || cardVegetarian;
+      const matchesPrice = !priceRange || cardPrices.some((p) => p >= priceRange!.min && p <= priceRange!.max);
       const matchesSearch = searchQuery.length === 0 || cardName.includes(searchQuery);
-      const show = matchesCuisine && matchesZone && matchesSearch;
+
+      const show =
+        matchesCuisine &&
+        matchesZone &&
+        matchesDeliveryZone &&
+        matchesFeatures &&
+        matchesVegetarian &&
+        matchesPrice &&
+        matchesSearch;
       card.hidden = !show;
       if (show) visible += 1;
     });
@@ -113,16 +219,23 @@ const { cuisineTypes, zones } = Astro.props;
   }
 
   form?.addEventListener('change', applyFilters);
+  searchInput?.addEventListener('input', () => {
+    searchQuery = normalize(searchInput.value);
+    applyFilters();
+  });
   document.querySelector('[data-filters-clear]')?.addEventListener('click', () => {
     form?.querySelectorAll<HTMLInputElement>('input[type="checkbox"]').forEach((el) => (el.checked = false));
+    form?.querySelectorAll<HTMLSelectElement>('select').forEach((el) => (el.value = ''));
+    if (searchInput) searchInput.value = '';
+    searchQuery = '';
     applyFilters();
   });
 
   const zoneParam = initialParams.get('zone');
   if (zoneParam && form) {
-    const zoneCheckbox = form.querySelector<HTMLInputElement>(`input[name="zone"][value="${CSS.escape(zoneParam)}"]`);
-    if (zoneCheckbox) {
-      zoneCheckbox.checked = true;
+    const zoneSelect = form.querySelector<HTMLSelectElement>('[data-filter-zone]');
+    if (zoneSelect && Array.from(zoneSelect.options).some((o) => o.value === zoneParam)) {
+      zoneSelect.value = zoneParam;
     }
   }
   if (searchQuery.length > 0 || zoneParam) {

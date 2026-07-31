@@ -8,6 +8,9 @@ interface Props {
 
 const { restaurant } = Astro.props;
 const cheapestMenu = [...restaurant.menus].sort((a, b) => a.currentPrice - b.currentPrice)[0];
+const activeFeatures = Object.entries(restaurant.features)
+  .filter(([key, value]) => key !== 'paymentMethods' && value === true)
+  .map(([key]) => key);
 ---
 
 <a
@@ -16,6 +19,10 @@ const cheapestMenu = [...restaurant.menus].sort((a, b) => a.currentPrice - b.cur
   data-restaurant-card
   data-cuisine={restaurant.cuisineTypes.join('|')}
   data-zone={restaurant.zone}
+  data-delivery-zones={restaurant.deliveryZones.join('|')}
+  data-prices={restaurant.menus.map((menu) => menu.currentPrice).join('|')}
+  data-vegetarian={restaurant.vegetarianOption}
+  data-features={activeFeatures.join('|')}
   data-name={restaurant.name}
 >
   <div class="restaurant-card__image">

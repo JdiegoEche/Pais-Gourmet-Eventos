@@ -2,22 +2,34 @@
 import Layout from '../../layouts/Layout.astro';
 import RestaurantCard from '../../components/RestaurantCard.astro';
 import RestaurantFilters from '../../components/RestaurantFilters.astro';
-import { getAllRestaurants } from '../../lib/data';
+import { getAllRestaurants, getEvent } from '../../lib/data';
 
 const restaurants = await getAllRestaurants();
+const event = await getEvent();
 const cuisineTypes = [...new Set(restaurants.flatMap((r) => r.cuisineTypes))];
 const zones = [...new Set(restaurants.map((r) => r.zone))];
+const deliveryZones = [...new Set(restaurants.flatMap((r) => r.deliveryZones))];
+const priceRanges = event?.priceRanges.map((p) => p.range) ?? [];
 ---
 
 <Layout title="Restaurantes participantes">
   <section class="restaurant-listing">
     <h1>Restaurantes participantes</h1>
-    <RestaurantFilters cuisineTypes={cuisineTypes} zones={zones} />
-    <p class="restaurant-listing__count">
-      Mostrando <span data-results-count>{restaurants.length}</span> de {restaurants.length} restaurantes
-    </p>
-    <div class="restaurant-listing__grid" data-restaurant-grid>
-      {restaurants.map((restaurant) => <RestaurantCard restaurant={restaurant} />)}
+    <div class="restaurant-listing__layout">
+      <RestaurantFilters
+        cuisineTypes={cuisineTypes}
+        zones={zones}
+        deliveryZones={deliveryZones}
+        priceRanges={priceRanges}
+      />
+      <div class="restaurant-listing__main">
+        <p class="restaurant-listing__count">
+          Mostrando <span data-results-count>{restaurants.length}</span> de {restaurants.length} restaurantes
+        </p>
+        <div class="restaurant-listing__grid" data-restaurant-grid>
+          {restaurants.map((restaurant) => <RestaurantCard restaurant={restaurant} />)}
+        </div>
+      </div>
     </div>
   </section>
 </Layout>
@@ -25,11 +37,23 @@ const zones = [...new Set(restaurants.map((r) => r.zone))];
 <style>
   .restaurant-listing {
     padding: var(--spacing-lg) var(--spacing-md);
-    max-width: 1100px;
+    max-width: 1300px;
     margin: 0 auto;
   }
   .restaurant-listing h1 {
     color: var(--color-primary-dark);
+  }
+  .restaurant-listing__layout {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-lg);
+  }
+  .restaurant-listing__layout > :global(aside) {
+    flex: 0 0 260px;
+  }
+  .restaurant-listing__main {
+    flex: 1;
+    min-width: 0;
   }
   .restaurant-listing__count {
     color: var(--color-text-muted);
@@ -39,5 +63,15 @@ const zones = [...new Set(restaurants.map((r) => r.zone))];
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
     gap: var(--spacing-md);
+  }
+  @media (max-width: 768px) {
+    .restaurant-listing__layout {
+      flex-direction: column;
+    }
+    .restaurant-listing__layout > :global(aside) {
+      flex-basis: auto;
+      width: 100%;
+      position: static;
+    }
   }
 </style>

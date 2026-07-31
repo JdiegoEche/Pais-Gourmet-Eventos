@@ -59,6 +59,7 @@ export interface Restaurant {
   logo?: string;
   cuisineTypes: string[];
   zone: string;
+  deliveryZones: string[];
   address: string;
   phone: string;
   whatsapp?: string;

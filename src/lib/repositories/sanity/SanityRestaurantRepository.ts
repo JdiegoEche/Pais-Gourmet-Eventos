@@ -9,6 +9,7 @@ const restaurantProjection = `{
   "logo": logo.asset->url,
   cuisineTypes,
   zone,
+  deliveryZones,
   address,
   phone,
   whatsapp,
