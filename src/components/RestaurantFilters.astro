@@ -240,8 +240,12 @@ const { cuisineTypes, zones, deliveryZones, priceRanges } = Astro.props;
   let searchQuery = normalize(initialParams.get('q') ?? '');
   if (searchInput) searchInput.value = initialParams.get('q') ?? '';
 
-  function applyFilters() {
-    if (!form) return;
+  const BATCH_SIZE = 24;
+  let visibleCount = BATCH_SIZE;
+  let totalMatches = 0;
+
+  function matchesFilters(card: HTMLElement): boolean {
+    if (!form) return true;
     const cuisine = form.querySelector<HTMLSelectElement>('[data-filter-cuisine]')?.value ?? '';
     const zone = form.querySelector<HTMLSelectElement>('[data-filter-zone]')?.value ?? '';
     const deliveryZone = form.querySelector<HTMLSelectElement>('[data-filter-delivery-zone]')?.value ?? '';
@@ -252,38 +256,68 @@ const { cuisineTypes, zones, deliveryZones, priceRanges } = Astro.props;
     const priceRangeValue = form.querySelector<HTMLSelectElement>('[data-filter-price]')?.value ?? '';
     const priceRange = priceRangeValue ? parsePriceRange(priceRangeValue) : null;
 
-    let visible = 0;
-    cards.forEach((card) => {
-      const cardCuisines = card.dataset.cuisine?.split('|') ?? [];
-      const cardZone = card.dataset.zone ?? '';
-      const cardDeliveryZones = card.dataset.deliveryZones ? card.dataset.deliveryZones.split('|') : [];
-      const cardFeatures = card.dataset.features ? card.dataset.features.split('|') : [];
-      const cardPrices = card.dataset.prices ? card.dataset.prices.split('|').map(Number) : [];
-      const cardVegetarian = card.dataset.vegetarian === 'true';
-      const cardName = normalize(card.dataset.name ?? '');
+    const cardCuisines = card.dataset.cuisine?.split('|') ?? [];
+    const cardZone = card.dataset.zone ?? '';
+    const cardDeliveryZones = card.dataset.deliveryZones ? card.dataset.deliveryZones.split('|') : [];
+    const cardFeatures = card.dataset.features ? card.dataset.features.split('|') : [];
+    const cardPrices = card.dataset.prices ? card.dataset.prices.split('|').map(Number) : [];
+    const cardVegetarian = card.dataset.vegetarian === 'true';
+    const cardName = normalize(card.dataset.name ?? '');
 
-      const matchesCuisine = !cuisine || cardCuisines.includes(cuisine);
-      const matchesZone = !zone || cardZone === zone;
-      const matchesDeliveryZone = !deliveryZone || cardDeliveryZones.includes(deliveryZone);
-      const matchesFeatures = features.every((f) => cardFeatures.includes(f));
-      const matchesVegetarian = !vegetarianOnly || cardVegetarian;
-      const matchesPrice = !priceRange || cardPrices.some((p) => p >= priceRange!.min && p <= priceRange!.max);
-      const matchesSearch = searchQuery.length === 0 || cardName.includes(searchQuery);
+    const matchesCuisine = !cuisine || cardCuisines.includes(cuisine);
+    const matchesZone = !zone || cardZone === zone;
+    const matchesDeliveryZone = !deliveryZone || cardDeliveryZones.includes(deliveryZone);
+    const matchesFeatures = features.every((f) => cardFeatures.includes(f));
+    const matchesVegetarian = !vegetarianOnly || cardVegetarian;
+    const matchesPrice = !priceRange || cardPrices.some((p) => p >= priceRange!.min && p <= priceRange!.max);
+    const matchesSearch = searchQuery.length === 0 || cardName.includes(searchQuery);
 
-      const show =
-        matchesCuisine &&
-        matchesZone &&
-        matchesDeliveryZone &&
-        matchesFeatures &&
-        matchesVegetarian &&
-        matchesPrice &&
-        matchesSearch;
-      card.hidden = !show;
-      if (show) visible += 1;
-    });
-
-    if (counter) counter.textContent = String(visible);
+    return (
+      matchesCuisine &&
+      matchesZone &&
+      matchesDeliveryZone &&
+      matchesFeatures &&
+      matchesVegetarian &&
+      matchesPrice &&
+      matchesSearch
+    );
   }
+
+  // Solo revela hasta `visibleCount` tarjetas entre las que matchean, sin recalcular el filtro.
+  // La usa el IntersectionObserver para ir mostrando más de a tandas al hacer scroll.
+  function revealVisible() {
+    let matchIndex = 0;
+    cards.forEach((card) => {
+      if (card.dataset.filterMatch !== 'true') {
+        card.hidden = true;
+        return;
+      }
+      matchIndex += 1;
+      card.hidden = matchIndex > visibleCount;
+    });
+    totalMatches = matchIndex;
+    if (counter) counter.textContent = String(Math.min(visibleCount, totalMatches));
+  }
+
+  function applyFilters() {
+    cards.forEach((card) => {
+      card.dataset.filterMatch = String(matchesFilters(card));
+    });
+    visibleCount = BATCH_SIZE;
+    revealVisible();
+  }
+
+  const sentinel = document.querySelector<HTMLElement>('[data-restaurant-sentinel]');
+  const observer = new IntersectionObserver(
+    (entries) => {
+      if (entries[0]?.isIntersecting && visibleCount < totalMatches) {
+        visibleCount += BATCH_SIZE;
+        revealVisible();
+      }
+    },
+    { rootMargin: '400px' }
+  );
+  if (sentinel) observer.observe(sentinel);
 
   form?.addEventListener('change', applyFilters);
   searchInput?.addEventListener('input', () => {
@@ -310,7 +344,5 @@ const { cuisineTypes, zones, deliveryZones, priceRanges } = Astro.props;
       zoneSelect.value = zoneParam;
     }
   }
-  if (searchQuery.length > 0 || zoneParam) {
-    applyFilters();
-  }
+  applyFilters();
 </script>

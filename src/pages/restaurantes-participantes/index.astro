@@ -28,6 +28,7 @@ const priceRanges = event?.priceRanges.map((p) => p.range) ?? [];
         <div class="restaurant-listing__grid" data-restaurant-grid>
           {restaurants.map((restaurant) => <RestaurantCard restaurant={restaurant} />)}
         </div>
+        <div class="restaurant-listing__sentinel" data-restaurant-sentinel aria-hidden="true"></div>
       </div>
     </div>
   </section>
