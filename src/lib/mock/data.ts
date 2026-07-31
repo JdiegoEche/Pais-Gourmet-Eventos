@@ -262,6 +262,170 @@ export const mockRestaurants: Restaurant[] = [
   },
 ];
 
+const GENERATED_ZONES = ['Armenia', 'Pereira', 'Manizales'];
+const GENERATED_CUISINES = [
+  'Colombiana',
+  'Italiana',
+  'Asiática',
+  'Mediterránea',
+  'Parrilla',
+  'Fusión',
+  'Mexicana',
+  'Peruana',
+  'Vegetariana',
+  'Mariscos',
+];
+const NAME_PREFIXES = ['El', 'La', 'Los', 'Las', 'Casa', 'Restaurante'];
+const NAME_CORES = [
+  'Fogón',
+  'Sazón',
+  'Girasol',
+  'Bistró',
+  'Rincón',
+  'Mirador',
+  'Trattoria',
+  'Cantina',
+  'Molino',
+  'Establo',
+  'Patio',
+  'Balcón',
+  'Tinajas',
+  'Cafetal',
+  'Trapiche',
+  'Fonda',
+  'Taberna',
+  'Comedor',
+  'Jardín',
+  'Terraza',
+  'Vitral',
+  'Alero',
+];
+const NAME_SUFFIXES = [
+  'Criollo',
+  'del Eje',
+  'Dorado',
+  'Real',
+  'Andino',
+  'del Café',
+  'Gourmet',
+  'Tradicional',
+  'del Valle',
+  'Cafetero',
+  'Colonial',
+  'Campesino',
+];
+
+const ENTRANTES = [
+  'Patacón con hogao',
+  'Empanadas de pipián',
+  'Ceviche de camarón',
+  'Bruschetta caprese',
+  'Tabla de quesos',
+  'Croquetas de jamón',
+  'Gyozas de cerdo',
+  'Hummus con pan pita',
+  'Carpaccio de res',
+  'Sopa de la casa',
+];
+const FUERTES = [
+  'Bandeja paisa',
+  'Risotto de champiñones',
+  'Lomo al trapo',
+  'Ramen tonkotsu',
+  'Pescado a la plancha',
+  'Pasta al pesto',
+  'Costillas BBQ',
+  'Arroz de mariscos',
+  'Pollo a la brasa',
+  'Sancocho de gallina',
+];
+const POSTRES = [
+  'Flan de café',
+  'Tiramisú de la casa',
+  'Postre de natas',
+  'Brownie con helado',
+  'Obleas con arequipe',
+  'Cheesecake de mora',
+  'Torta de chocolate',
+  'Ensalada de frutas',
+];
+
+function slugify(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+}
+
+function generateRestaurants(count: number): Restaurant[] {
+  const usedSlugs = new Set(mockRestaurants.map((r) => r.slug));
+  const restaurants: Restaurant[] = [];
+
+  for (let i = 0; i < count; i++) {
+    const prefix = NAME_PREFIXES[i % NAME_PREFIXES.length];
+    const core = NAME_CORES[i % NAME_CORES.length];
+    const suffix = i % 2 === 0 ? ` ${NAME_SUFFIXES[i % NAME_SUFFIXES.length]}` : '';
+    const name = `${prefix} ${core}${suffix}`;
+
+    let slug = slugify(name);
+    if (usedSlugs.has(slug)) slug = `${slug}-${i}`;
+    usedSlugs.add(slug);
+
+    const zone = GENERATED_ZONES[i % GENERATED_ZONES.length];
+    const cuisineTypes = [GENERATED_CUISINES[i % GENERATED_CUISINES.length]];
+    if (i % 4 === 0) cuisineTypes.push(GENERATED_CUISINES[(i + 3) % GENERATED_CUISINES.length]);
+
+    const delivery = i % 3 !== 0;
+    const deliveryZones = delivery ? [zone, ...(i % 5 === 0 ? [GENERATED_ZONES[(i + 1) % 3]] : [])] : [];
+
+    const basePrice = 45000 + (i % 8) * 9000;
+    const menuCount = i % 5 === 0 ? 2 : 1;
+    const menus = Array.from({ length: menuCount }, (_, m) => ({
+      name: m === 0 ? `Menú ${core}` : `Menú ${NAME_CORES[(i + m) % NAME_CORES.length]}`,
+      currentPrice: basePrice + m * 8000,
+      previousPrice: basePrice + m * 8000 + 20000,
+      items: [
+        { name: ENTRANTES[(i + m) % ENTRANTES.length], category: 'entrantes' as const },
+        { name: FUERTES[(i + m * 2) % FUERTES.length], category: 'fuerte' as const },
+        { name: POSTRES[(i + m) % POSTRES.length], category: 'postre' as const },
+      ],
+    }));
+
+    restaurants.push({
+      slug,
+      eventSlug: 'pais-gourmet-demo',
+      name,
+      logo: foodPhoto(`${slug}-logo`, 200, 200),
+      cuisineTypes,
+      zone,
+      deliveryZones,
+      address: `Calle ${10 + (i % 40)} # ${5 + (i % 30)}-${10 + (i % 60)}, ${zone}`,
+      phone: `31${String(10000000 + i * 137).padStart(8, '0')}`,
+      instagram: slug.replace(/-/g, ''),
+      hours: '- Todos los días de 12:00 m a 9:00 pm',
+      menus,
+      features: {
+        parking: i % 2 === 0,
+        petFriendly: i % 3 === 0,
+        delivery,
+        tableService: true,
+        creditCard: i % 4 !== 0,
+        paymentMethods: i % 4 !== 0 ? ['Efectivo', 'Tarjeta'] : ['Efectivo'],
+      },
+      menuHighlights: [],
+      vegetarianOption: i % 3 === 0,
+      gallery: gallery(slug, 4),
+      relatedRestaurantSlugs: [],
+    });
+  }
+
+  return restaurants;
+}
+
+mockRestaurants.push(...generateRestaurants(72 - mockRestaurants.length));
+
 export const mockReviewsSeed: ReviewSeed[] = [
   { restaurantSlug: 'la-tulpa-fuego-y-cafe', name: 'Camila R.', rating: 5, comment: 'El sancocho estaba espectacular, muy buena atención.', createdAt: '2026-07-10T18:30:00.000Z' },
   { restaurantSlug: 'la-tulpa-fuego-y-cafe', name: 'Julián M.', rating: 4, comment: 'Rico ambiente, aunque tardaron un poco con el postre.', createdAt: '2026-07-15T20:00:00.000Z' },
