@@ -4,6 +4,7 @@
   --color-primary: #c1440e;
   --color-primary-dark: #8a3208;
   --color-accent: #e3a857;
+  --color-accent-dark: #9c6a1f; /* misma tonalidad que --color-accent, oscurecida para dar 4.5:1 sobre --color-surface (WCAG AA texto) */
   --color-text: #2b2118;
   --color-text-muted: #6b5c4d;
   --color-border: #e8dcc8;

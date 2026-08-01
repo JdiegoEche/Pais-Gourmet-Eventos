@@ -32,9 +32,17 @@ const { event } = Astro.props;
     text-align: center;
     background:
       linear-gradient(180deg, rgba(20, 14, 8, 0.6), rgba(20, 14, 8, 0.6)),
-      url('https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1600&h=800&fit=crop') center / cover
-        no-repeat;
+      url('https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&h=800&fit=crop&auto=format')
+        center / cover no-repeat;
     border-radius: var(--radius);
+  }
+  @media (min-width: 640px) {
+    .event-hero {
+      background:
+        linear-gradient(180deg, rgba(20, 14, 8, 0.6), rgba(20, 14, 8, 0.6)),
+        url('https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1600&h=800&fit=crop&auto=format')
+          center / cover no-repeat;
+    }
   }
   .event-hero h1 {
     font-size: clamp(2rem, 5vw, 3rem);

@@ -5,9 +5,18 @@
   <h2>Inscribite</h2>
   <p>Dejanos tus datos y te contamos las novedades del evento.</p>
   <form data-signup-form>
-    <input type="text" name="name" placeholder="Tu nombre" required maxlength="100" />
-    <input type="email" name="email" placeholder="Tu email" required />
-    <input type="tel" name="phone" placeholder="Tu celular" required />
+    <label class="signup-form__field">
+      Nombre
+      <input type="text" name="name" placeholder="Ej: Juan Pérez" required maxlength="100" />
+    </label>
+    <label class="signup-form__field">
+      Email
+      <input type="email" name="email" placeholder="Ej: juan@email.com" required />
+    </label>
+    <label class="signup-form__field">
+      Celular
+      <input type="tel" name="phone" placeholder="Ej: 11 2345 6789" required pattern="[0-9+\s()-]{7,20}" />
+    </label>
     <button type="submit">Enviar</button>
   </form>
   <p data-signup-message role="status"></p>
@@ -30,11 +39,25 @@
   .signup-form p {
     color: var(--color-text-muted);
   }
+  .signup-form p[data-state='success'] {
+    color: #2f7a3d;
+  }
+  .signup-form p[data-state='error'] {
+    color: #b3261e;
+  }
   .signup-form form {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xs);
     margin-top: var(--spacing-sm);
+  }
+  .signup-form__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    text-align: left;
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
   }
   .signup-form input {
     padding: 0.6rem 0.75rem;
@@ -78,9 +101,15 @@
 
     if (response.ok) {
       message.textContent = '¡Gracias! Ya te anotamos.';
+      message.dataset.state = 'success';
       form.reset();
     } else {
-      message.textContent = 'Hubo un error, probá de nuevo.';
+      const body = await response.json().catch(() => null);
+      message.textContent =
+        response.status === 400
+          ? 'Revisá que el nombre, el email y el celular tengan un formato válido.'
+          : (body?.error ?? 'Hubo un error, probá de nuevo.');
+      message.dataset.state = 'error';
     }
   });
 </script>

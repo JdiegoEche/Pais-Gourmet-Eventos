@@ -8,9 +8,18 @@ const { restaurantSlug } = Astro.props;
 
 <form class="review-form" data-review-form data-restaurant-slug={restaurantSlug}>
   <h3>Dejá tu reseña</h3>
-  <input type="text" name="name" placeholder="Tu nombre" required minlength="3" maxlength="30" />
-  <input type="tel" name="phone" placeholder="Tu celular" required />
-  <input type="email" name="email" placeholder="Tu email" required />
+  <label class="review-form__field">
+    Nombre
+    <input type="text" name="name" placeholder="Ej: Juan Pérez" required minlength="3" maxlength="30" />
+  </label>
+  <label class="review-form__field">
+    Celular
+    <input type="tel" name="phone" placeholder="Ej: 11 2345 6789" required pattern="[0-9+\s()-]{7,20}" />
+  </label>
+  <label class="review-form__field">
+    Email
+    <input type="email" name="email" placeholder="Ej: juan@email.com" required />
+  </label>
   <p class="review-form__privacy">Tu celular y email no se publican, solo los usamos para contactarte.</p>
   <div class="review-form__ratings">
     <label class="review-form__rating">
@@ -44,7 +53,10 @@ const { restaurantSlug } = Astro.props;
       </select>
     </label>
   </div>
-  <textarea name="comment" placeholder="Contanos cómo fue tu experiencia" required maxlength="300"></textarea>
+  <label class="review-form__field">
+    Comentario
+    <textarea name="comment" placeholder="Contanos cómo fue tu experiencia" required maxlength="300"></textarea>
+  </label>
   <button type="submit">Publicar reseña</button>
   <p class="review-form__status" data-review-status role="status"></p>
 </form>
@@ -67,6 +79,13 @@ const { restaurantSlug } = Astro.props;
   .review-form__privacy {
     margin: -0.25rem 0 0;
     font-size: 0.8rem;
+    color: var(--color-text-muted);
+  }
+  .review-form__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.9rem;
     color: var(--color-text-muted);
   }
   .review-form input,
@@ -145,7 +164,17 @@ const { restaurantSlug } = Astro.props;
         }),
       });
 
-      if (!response.ok) throw new Error('request failed');
+      if (!response.ok) {
+        const body = await response.json().catch(() => null);
+        if (status) {
+          status.textContent =
+            response.status === 400
+              ? 'Revisá el nombre, el celular, el email y el comentario: alguno tiene un formato inválido.'
+              : (body?.error ?? 'No pudimos publicar tu reseña. Intentá de nuevo.');
+          status.dataset.state = 'error';
+        }
+        return;
+      }
 
       form.reset();
       if (status) {
@@ -155,7 +184,7 @@ const { restaurantSlug } = Astro.props;
       document.dispatchEvent(new CustomEvent('review:created', { detail: { restaurantSlug } }));
     } catch {
       if (status) {
-        status.textContent = 'No pudimos publicar tu reseña. Intentá de nuevo.';
+        status.textContent = 'No pudimos publicar tu reseña. Revisá tu conexión e intentá de nuevo.';
         status.dataset.state = 'error';
       }
     }

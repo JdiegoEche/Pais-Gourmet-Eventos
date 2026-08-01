@@ -21,14 +21,22 @@ const { photos, alt } = Astro.props;
           data-index={index}
           aria-label={`Ver foto ${index + 1} de ${alt} en pantalla completa`}
         >
-          <img src={thumb(src, 1000)} alt={`${alt} — foto ${index + 1}`} loading={index === 0 ? 'eager' : 'lazy'} />
+          <img src={thumb(src, 1000)} alt={`${alt} — foto ${index + 1}`} loading={index === 0 ? 'eager' : 'lazy'} decoding="async" />
         </button>
       ))}
     </div>
     {photos.length > 1 && (
       <>
-        <button type="button" class="photo-gallery__nav photo-gallery__nav--prev" data-strip-prev aria-label="Fotos anteriores">‹</button>
-        <button type="button" class="photo-gallery__nav photo-gallery__nav--next" data-strip-next aria-label="Fotos siguientes">›</button>
+        <button type="button" class="photo-gallery__nav photo-gallery__nav--prev" data-strip-prev aria-label="Fotos anteriores">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+        <button type="button" class="photo-gallery__nav photo-gallery__nav--next" data-strip-next aria-label="Fotos siguientes">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
       </>
     )}
   </div>
@@ -37,14 +45,27 @@ const { photos, alt } = Astro.props;
 </div>
 
 <dialog class="photo-gallery__dialog" data-photo-dialog>
-  <button type="button" class="photo-gallery__close" data-photo-close aria-label="Cerrar">✕</button>
+  <button type="button" class="photo-gallery__close" data-photo-close aria-label="Cerrar">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <line x1="18" y1="6" x2="6" y2="18"></line>
+      <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+  </button>
   {photos.length > 1 && (
     <>
-      <button type="button" class="photo-gallery__nav photo-gallery__nav--prev" data-photo-prev aria-label="Foto anterior">‹</button>
-      <button type="button" class="photo-gallery__nav photo-gallery__nav--next" data-photo-next aria-label="Foto siguiente">›</button>
+      <button type="button" class="photo-gallery__nav photo-gallery__nav--prev" data-photo-prev aria-label="Foto anterior">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+      </button>
+      <button type="button" class="photo-gallery__nav photo-gallery__nav--next" data-photo-next aria-label="Foto siguiente">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      </button>
     </>
   )}
-  <img data-photo-dialog-image alt="" />
+  <img data-photo-dialog-image alt="" decoding="async" />
 </dialog>
 
 <style>
@@ -132,8 +153,11 @@ const { photos, alt } = Astro.props;
     background: var(--color-surface);
     border: none;
     border-radius: 50%;
-    width: 2rem;
-    height: 2rem;
+    width: 2.75rem;
+    height: 2.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
   }
   .photo-gallery__nav {
@@ -143,9 +167,8 @@ const { photos, alt } = Astro.props;
     background: var(--color-surface);
     border: none;
     border-radius: 50%;
-    width: 2.5rem;
-    height: 2.5rem;
-    font-size: 1.5rem;
+    width: 2.75rem;
+    height: 2.75rem;
     line-height: 1;
     display: flex;
     align-items: center;

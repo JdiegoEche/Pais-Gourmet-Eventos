@@ -9,7 +9,7 @@ const { images } = Astro.props;
 ---
 
 {images.length > 0 && (
-  <section class="rotating-banner" data-rotating-banner>
+  <section class="rotating-banner" data-rotating-banner aria-label="Banner de destacados">
     {images.map((src, index) => (
       <img
         src={thumb(src, 1600)}
@@ -19,6 +19,23 @@ const { images } = Astro.props;
         style={index === 0 ? undefined : 'opacity:0'}
       />
     ))}
+    {images.length > 1 && (
+      <button
+        type="button"
+        class="rotating-banner__toggle"
+        data-banner-toggle
+        aria-label="Pausar rotación de banner"
+        aria-pressed="false"
+      >
+        <svg data-icon-pause viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+          <rect x="6" y="5" width="4" height="14"></rect>
+          <rect x="14" y="5" width="4" height="14"></rect>
+        </svg>
+        <svg data-icon-play class="rotating-banner__icon--hidden" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+          <polygon points="7 4 20 12 7 20"></polygon>
+        </svg>
+      </button>
+    )}
   </section>
 )}
 
@@ -39,17 +56,88 @@ const { images } = Astro.props;
     object-fit: cover;
     transition: opacity 0.6s ease;
   }
+  .rotating-banner__toggle {
+    position: absolute;
+    bottom: 0.5rem;
+    right: 0.5rem;
+    width: 2.75rem;
+    height: 2.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 50%;
+    background: rgba(20, 14, 8, 0.55);
+    color: white;
+    cursor: pointer;
+  }
+  .rotating-banner__toggle:hover {
+    background: rgba(20, 14, 8, 0.8);
+  }
+  .rotating-banner__icon--hidden {
+    display: none;
+  }
 </style>
 
 <script>
+  const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+
   document.querySelectorAll<HTMLElement>('[data-rotating-banner]').forEach((banner) => {
     const slides = Array.from(banner.querySelectorAll<HTMLImageElement>('[data-banner-slide]'));
+    const toggle = banner.querySelector<HTMLButtonElement>('[data-banner-toggle]');
+    const pauseIcon = toggle?.querySelector<SVGElement>('[data-icon-pause]');
+    const playIcon = toggle?.querySelector<SVGElement>('[data-icon-play]');
     if (slides.length <= 1) return;
+
     let current = 0;
-    setInterval(() => {
+    let timer: ReturnType<typeof setInterval> | null = null;
+    let paused = reduceMotionQuery.matches;
+
+    function advance() {
       slides[current].style.opacity = '0';
       current = (current + 1) % slides.length;
       slides[current].style.opacity = '1';
-    }, 3000);
+    }
+
+    function start() {
+      if (timer || paused) return;
+      timer = setInterval(advance, 3000);
+    }
+
+    function stop() {
+      if (timer) {
+        clearInterval(timer);
+        timer = null;
+      }
+    }
+
+    function syncToggleUi() {
+      toggle?.setAttribute('aria-pressed', String(paused));
+      toggle?.setAttribute('aria-label', paused ? 'Reanudar rotación de banner' : 'Pausar rotación de banner');
+      pauseIcon?.classList.toggle('rotating-banner__icon--hidden', paused);
+      playIcon?.classList.toggle('rotating-banner__icon--hidden', !paused);
+    }
+
+    toggle?.addEventListener('click', () => {
+      paused = !paused;
+      syncToggleUi();
+      if (paused) stop();
+      else start();
+    });
+
+    banner.addEventListener('mouseenter', stop);
+    banner.addEventListener('mouseleave', () => { if (!paused) start(); });
+    banner.addEventListener('focusin', stop);
+    banner.addEventListener('focusout', () => { if (!paused) start(); });
+
+    reduceMotionQuery.addEventListener('change', (event) => {
+      paused = event.matches;
+      syncToggleUi();
+      if (paused) stop();
+      else start();
+    });
+
+    syncToggleUi();
+    start();
   });
 </script>

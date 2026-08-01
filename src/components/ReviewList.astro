@@ -47,11 +47,23 @@ function stars(value: number) {
 
         <form class="review-list__reply-form" data-reply-form={review.id} hidden>
           <h4>Responder</h4>
-          <input type="text" name="name" placeholder="Tu nombre" required minlength="3" maxlength="30" />
-          <input type="tel" name="phone" placeholder="Tu celular" required />
-          <input type="email" name="email" placeholder="Tu email" required />
+          <label class="review-list__reply-field">
+            Nombre
+            <input type="text" name="name" placeholder="Ej: Juan Pérez" required minlength="3" maxlength="30" />
+          </label>
+          <label class="review-list__reply-field">
+            Celular
+            <input type="tel" name="phone" placeholder="Ej: 11 2345 6789" required pattern="[0-9+\s()-]{7,20}" />
+          </label>
+          <label class="review-list__reply-field">
+            Email
+            <input type="email" name="email" placeholder="Ej: juan@email.com" required />
+          </label>
           <p class="review-form__privacy">Tu celular y email no se publican, solo los usamos para contactarte.</p>
-          <textarea name="message" placeholder="Escribí tu respuesta" required maxlength="300"></textarea>
+          <label class="review-list__reply-field">
+            Respuesta
+            <textarea name="message" placeholder="Escribí tu respuesta" required maxlength="300"></textarea>
+          </label>
           <button type="submit">Enviar respuesta</button>
           <p class="review-list__reply-status" data-reply-status role="status"></p>
         </form>
@@ -85,7 +97,7 @@ function stars(value: number) {
     margin-bottom: 0.25rem;
   }
   :global(.review-list__rating) {
-    color: var(--color-accent);
+    color: var(--color-accent-dark);
     letter-spacing: 0.1em;
   }
   :global(.review-list__breakdown) {
@@ -111,7 +123,7 @@ function stars(value: number) {
     border: 1px solid var(--color-border);
     border-radius: 999px;
     color: var(--color-text-muted);
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.02em;
@@ -146,6 +158,13 @@ function stars(value: number) {
   :global(.review-list__reply-form h4) {
     margin: 0 0 0.25rem;
     color: var(--color-primary-dark);
+  }
+  :global(.review-list__reply-field) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
   }
   :global(.review-list__reply-form .review-form__privacy) {
     margin: 0;
@@ -246,11 +265,23 @@ function stars(value: number) {
             <button type="button" class="review-list__reply-toggle" data-reply-toggle="${review.id}">Responder</button>
             <form class="review-list__reply-form" data-reply-form="${review.id}" hidden>
               <h4>Responder</h4>
-              <input type="text" name="name" placeholder="Tu nombre" required minlength="3" maxlength="30" />
-              <input type="tel" name="phone" placeholder="Tu celular" required />
-              <input type="email" name="email" placeholder="Tu email" required />
+              <label class="review-list__reply-field">
+                Nombre
+                <input type="text" name="name" placeholder="Ej: Juan Pérez" required minlength="3" maxlength="30" />
+              </label>
+              <label class="review-list__reply-field">
+                Celular
+                <input type="tel" name="phone" placeholder="Ej: 11 2345 6789" required pattern="[0-9+\\s()-]{7,20}" />
+              </label>
+              <label class="review-list__reply-field">
+                Email
+                <input type="email" name="email" placeholder="Ej: juan@email.com" required />
+              </label>
               <p class="review-form__privacy">Tu celular y email no se publican, solo los usamos para contactarte.</p>
-              <textarea name="message" placeholder="Escribí tu respuesta" required maxlength="300"></textarea>
+              <label class="review-list__reply-field">
+                Respuesta
+                <textarea name="message" placeholder="Escribí tu respuesta" required maxlength="300"></textarea>
+              </label>
               <button type="submit">Enviar respuesta</button>
               <p class="review-list__reply-status" data-reply-status role="status"></p>
             </form>
@@ -303,7 +334,17 @@ function stars(value: number) {
         }),
       });
 
-      if (!response.ok) throw new Error('request failed');
+      if (!response.ok) {
+        const body = await response.json().catch(() => null);
+        if (status) {
+          status.textContent =
+            response.status === 400
+              ? 'Revisá el nombre, el celular, el email y el mensaje: alguno tiene un formato inválido.'
+              : (body?.error ?? 'No pudimos publicar tu respuesta. Intentá de nuevo.');
+          status.dataset.state = 'error';
+        }
+        return;
+      }
 
       form.reset();
       if (status) {
@@ -313,7 +354,7 @@ function stars(value: number) {
       document.dispatchEvent(new CustomEvent('review:created', { detail: { restaurantSlug } }));
     } catch {
       if (status) {
-        status.textContent = 'No pudimos publicar tu respuesta. Intentá de nuevo.';
+        status.textContent = 'No pudimos publicar tu respuesta. Revisá tu conexión e intentá de nuevo.';
         status.dataset.state = 'error';
       }
     }

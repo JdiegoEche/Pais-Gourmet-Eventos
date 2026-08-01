@@ -27,7 +27,7 @@ const galleryUrls = restaurant.gallery.map((url) => thumb(url, 480));
   data-name={restaurant.name}
 >
   <div class="restaurant-card__image" data-carousel data-gallery={galleryUrls.join('|')}>
-    <img src={galleryUrls[0]} alt={restaurant.name} loading="lazy" data-carousel-img />
+    <img src={galleryUrls[0]} alt={restaurant.name} loading="lazy" decoding="async" width="480" height="480" data-carousel-img />
     {galleryUrls.length > 1 && (
       <>
         <button type="button" class="restaurant-card__nav restaurant-card__nav--prev" data-carousel-prev aria-label="Foto anterior">
@@ -87,21 +87,25 @@ const galleryUrls = restaurant.gallery.map((url) => thumb(url, 480));
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 2rem;
-    height: 2rem;
+    width: 2.75rem;
+    height: 2.75rem;
     border: none;
     border-radius: 50%;
     background: rgba(20, 14, 8, 0.55);
     color: white;
     cursor: pointer;
-    opacity: 0;
     transition: opacity 0.2s ease, background 0.2s ease;
   }
   .restaurant-card__nav:hover {
     background: rgba(20, 14, 8, 0.8);
   }
-  .restaurant-card__image:hover .restaurant-card__nav {
-    opacity: 1;
+  @media (hover: hover) and (pointer: fine) {
+    .restaurant-card__nav {
+      opacity: 0;
+    }
+    .restaurant-card__image:hover .restaurant-card__nav {
+      opacity: 1;
+    }
   }
   .restaurant-card__nav--prev {
     left: 0.5rem;

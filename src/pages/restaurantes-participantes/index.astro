@@ -22,7 +22,7 @@ const priceRanges = event?.priceRanges.map((p) => p.range) ?? [];
         priceRanges={priceRanges}
       />
       <div class="restaurant-listing__main">
-        <p class="restaurant-listing__count">
+        <p class="restaurant-listing__count" aria-live="polite" aria-atomic="true">
           Mostrando <span data-results-count>{restaurants.length}</span> de {restaurants.length} restaurantes
         </p>
         <div class="restaurant-listing__grid" data-restaurant-grid>
@@ -45,7 +45,6 @@ const priceRanges = event?.priceRanges.map((p) => p.range) ?? [];
   }
   .restaurant-listing__layout > :global(aside) {
     flex: 0 0 380px;
-    min-height: 100vh;
   }
   .restaurant-listing__main {
     flex: 1;
