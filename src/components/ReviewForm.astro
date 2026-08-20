@@ -4,6 +4,7 @@ interface Props {
 }
 
 const { restaurantSlug } = Astro.props;
+const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
 ---
 
 <form class="review-form" data-review-form data-restaurant-slug={restaurantSlug}>
@@ -57,6 +58,7 @@ const { restaurantSlug } = Astro.props;
     Comentario
     <textarea name="comment" placeholder="Contanos cómo fue tu experiencia" required maxlength="300"></textarea>
   </label>
+  {turnstileSiteKey && <div class="cf-turnstile" data-sitekey={turnstileSiteKey}></div>}
   <button type="submit">Publicar reseña</button>
   <p class="review-form__status" data-review-status role="status"></p>
 </form>
@@ -138,8 +140,9 @@ const { restaurantSlug } = Astro.props;
   }
 </style>
 
+{turnstileSiteKey && <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>}
+
 <script>
-  // Protección anti-spam (ej. Cloudflare Turnstile) pendiente de decisión del usuario.
   const form = document.querySelector<HTMLFormElement>('[data-review-form]');
   const status = form?.querySelector<HTMLParagraphElement>('[data-review-status]');
 
@@ -161,6 +164,7 @@ const { restaurantSlug } = Astro.props;
           serviceRating: Number(formData.get('serviceRating')),
           ambianceRating: Number(formData.get('ambianceRating')),
           comment: formData.get('comment'),
+          turnstileToken: formData.get('cf-turnstile-response'),
         }),
       });
 

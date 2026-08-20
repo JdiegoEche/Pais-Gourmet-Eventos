@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { createReview, getReviews } from '../../lib/data';
 import { isRateLimited } from '../../lib/rateLimit';
+import { isTurnstileValid } from '../../lib/turnstile';
 
 export const prerender = false;
 
@@ -10,9 +11,8 @@ const MAX_COMMENT_LENGTH = 300;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_PATTERN = /^[0-9+\s()-]{7,20}$/;
 
-// Anti-spam de contenido (Turnstile) queda pendiente de configuración — ver README.md.
 export const POST: APIRoute = async (context) => {
-  const { request, url } = context;
+  const { request, url, clientAddress } = context;
   const origin = request.headers.get('origin');
   if (origin && origin !== url.origin) {
     return new Response(JSON.stringify({ error: 'Origen no permitido' }), { status: 403 });
@@ -33,10 +33,8 @@ export const POST: APIRoute = async (context) => {
     return new Response(JSON.stringify({ error: 'Datos inválidos' }), { status: 400 });
   }
 
-  const { restaurantSlug, name, phone, email, foodRating, serviceRating, ambianceRating, comment } = body as Record<
-    string,
-    unknown
-  >;
+  const { restaurantSlug, name, phone, email, foodRating, serviceRating, ambianceRating, comment, turnstileToken } =
+    body as Record<string, unknown>;
 
   const isValidSubRating = (value: unknown): value is 1 | 2 | 3 | 4 | 5 =>
     Number.isInteger(value) && (value as number) >= 1 && (value as number) <= 5;
@@ -58,6 +56,12 @@ export const POST: APIRoute = async (context) => {
     !isValidSubRating(ambianceRating)
   ) {
     return new Response(JSON.stringify({ error: 'Datos inválidos' }), { status: 400 });
+  }
+
+  if (!(await isTurnstileValid(turnstileToken, clientAddress))) {
+    return new Response(JSON.stringify({ error: 'No pudimos verificar que sos una persona. Intentá de nuevo.' }), {
+      status: 403,
+    });
   }
 
   const rating = Math.round((foodRating + serviceRating + ambianceRating) / 3) as 1 | 2 | 3 | 4 | 5;
