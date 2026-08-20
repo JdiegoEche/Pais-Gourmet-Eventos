@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { createReview, getReviews } from '../../lib/data';
+import { isRateLimited } from '../../lib/rateLimit';
 
 export const prerender = false;
 
@@ -9,12 +10,16 @@ const MAX_COMMENT_LENGTH = 300;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_PATTERN = /^[0-9+\s()-]{7,20}$/;
 
-// Anti-spam de contenido (Turnstile) y rate limiting por IP (Cloudflare Rate Limiting Rules)
-// quedan pendientes de configuración en la cuenta de Cloudflare — ver README.md.
-export const POST: APIRoute = async ({ request, url }) => {
+// Anti-spam de contenido (Turnstile) queda pendiente de configuración — ver README.md.
+export const POST: APIRoute = async (context) => {
+  const { request, url } = context;
   const origin = request.headers.get('origin');
   if (origin && origin !== url.origin) {
     return new Response(JSON.stringify({ error: 'Origen no permitido' }), { status: 403 });
+  }
+
+  if (await isRateLimited(context)) {
+    return new Response(JSON.stringify({ error: 'Demasiadas solicitudes, intentá más tarde' }), { status: 429 });
   }
 
   let body: unknown;

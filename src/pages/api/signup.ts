@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { createLeadSignup } from '../../lib/data';
+import { isRateLimited } from '../../lib/rateLimit';
 
 export const prerender = false;
 
@@ -7,10 +8,15 @@ const MAX_NAME_LENGTH = 100;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_PATTERN = /^[0-9+\s()-]{7,20}$/;
 
-export const POST: APIRoute = async ({ request, url }) => {
+export const POST: APIRoute = async (context) => {
+  const { request, url } = context;
   const origin = request.headers.get('origin');
   if (origin && origin !== url.origin) {
     return new Response(JSON.stringify({ error: 'Origen no permitido' }), { status: 403 });
+  }
+
+  if (await isRateLimited(context)) {
+    return new Response(JSON.stringify({ error: 'Demasiadas solicitudes, intentá más tarde' }), { status: 429 });
   }
 
   let body: unknown;
