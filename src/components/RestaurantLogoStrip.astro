@@ -7,16 +7,44 @@ interface Props {
 }
 
 const { restaurants } = Astro.props;
+
+const ITEM_SIZE = 96;
+const GAP = 24;
+const SPEED_PX_PER_SEC = 40;
+const MIN_DURATION_SEC = 15;
+
+const row1 = restaurants.filter((_, i) => i % 2 === 0);
+const row2 = restaurants.filter((_, i) => i % 2 === 1);
+
+function rowDuration(items: Restaurant[]): number {
+  const width = items.length * (ITEM_SIZE + GAP);
+  return Math.max(width / SPEED_PX_PER_SEC, MIN_DURATION_SEC);
+}
 ---
 
 {restaurants.length > 0 && (
   <section class="logo-strip">
     <h2>Conocé algunos de los restaurantes</h2>
-    <div class="logo-strip__track">
-      {restaurants.map((restaurant) => (
-        <a class="logo-strip__item" href={`/restaurante/${restaurant.slug}`} aria-label={restaurant.name}>
-          <img src={thumb(restaurant.logo ?? restaurant.gallery[0], 160)} alt={restaurant.name} loading="lazy" />
-        </a>
+    <div class="logo-strip__rows">
+      {[row1, row2].map((row, rowIndex) => row.length > 0 && (
+        <div class="logo-strip__row" style={`--duration: ${rowDuration(row)}s`}>
+          <div class:list={['logo-strip__track', rowIndex === 1 && 'logo-strip__track--reverse']}>
+            {[...row, ...row].map((restaurant, i) => {
+              const isDuplicate = i >= row.length;
+              return (
+                <a
+                  class="logo-strip__item"
+                  href={`/restaurante/${restaurant.slug}`}
+                  aria-label={restaurant.name}
+                  aria-hidden={isDuplicate ? 'true' : undefined}
+                  tabindex={isDuplicate ? -1 : undefined}
+                >
+                  <img src={thumb(restaurant.logo ?? restaurant.gallery[0], 160)} alt="" loading="lazy" />
+                </a>
+              );
+            })}
+          </div>
+        </div>
       ))}
     </div>
   </section>
@@ -33,11 +61,27 @@ const { restaurants } = Astro.props;
     text-align: center;
     margin-bottom: var(--spacing-md);
   }
+  .logo-strip__rows {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+  .logo-strip__row {
+    overflow: hidden;
+    mask-image: linear-gradient(90deg, transparent, black 5%, black 95%, transparent);
+  }
   .logo-strip__track {
     display: flex;
+    width: max-content;
     gap: var(--spacing-md);
-    overflow-x: auto;
-    padding-bottom: var(--spacing-xs);
+    animation: logo-strip-scroll var(--duration) linear infinite;
+  }
+  .logo-strip__track--reverse {
+    animation-direction: reverse;
+  }
+  .logo-strip__row:hover .logo-strip__track,
+  .logo-strip__row:focus-within .logo-strip__track {
+    animation-play-state: paused;
   }
   .logo-strip__item {
     flex: 0 0 auto;
@@ -52,5 +96,25 @@ const { restaurants } = Astro.props;
     width: 100%;
     height: 100%;
     object-fit: cover;
+  }
+  @keyframes logo-strip-scroll {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .logo-strip__track {
+      animation: none;
+    }
+    .logo-strip__row {
+      overflow-x: auto;
+      mask-image: none;
+    }
+    .logo-strip__item[aria-hidden='true'] {
+      display: none;
+    }
   }
 </style>
