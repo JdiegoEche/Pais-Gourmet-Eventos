@@ -50,13 +50,13 @@ const videoEmbedUrl = youtubeEmbedUrl(restaurant.youtubeVideoUrl);
 ---
 
 <Layout title={restaurant.name}>
+  <PhotoGallery photos={restaurant.gallery} alt={restaurant.name} />
+
   <article class="restaurant-detail">
     <header class="restaurant-detail__header">
       <h1>{restaurant.name}</h1>
       <p class="restaurant-detail__meta">{restaurant.cuisineTypes.join(', ')} · {restaurant.zone}</p>
     </header>
-
-    <PhotoGallery photos={restaurant.gallery} alt={restaurant.name} />
 
     <div class="restaurant-detail__tabs" role="tablist" aria-label="Secciones del restaurante">
       <button
