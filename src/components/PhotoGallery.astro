@@ -19,6 +19,7 @@ const { photos, alt } = Astro.props;
           data-photo-trigger
           data-src={src}
           data-index={index}
+          data-alt={`${alt} — foto ${index + 1}`}
           aria-label={`Ver foto ${index + 1} de ${alt} en pantalla completa`}
         >
           <img src={thumb(src, 1000)} alt={`${alt} — foto ${index + 1}`} loading={index === 0 ? 'eager' : 'lazy'} decoding="async" />
@@ -89,7 +90,7 @@ const { photos, alt } = Astro.props;
     display: none;
   }
   .photo-gallery__frame {
-    flex: 0 0 100%;
+    flex: 0 0 92%;
     aspect-ratio: 1 / 1;
     padding: 0;
     border: none;
@@ -190,6 +191,11 @@ const { photos, alt } = Astro.props;
   .photo-gallery__nav--next {
     right: 0.5rem;
   }
+  @media (prefers-reduced-motion: reduce) {
+    .photo-gallery__strip {
+      scroll-behavior: auto;
+    }
+  }
 </style>
 
 <script>
@@ -198,6 +204,9 @@ const { photos, alt } = Astro.props;
   const dotsContainer = gallery?.querySelector<HTMLElement>('[data-photo-dots]');
   const stripPrev = gallery?.querySelector<HTMLButtonElement>('[data-strip-prev]');
   const stripNext = gallery?.querySelector<HTMLButtonElement>('[data-strip-next]');
+  const scrollBehavior: ScrollBehavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ? 'auto'
+    : 'smooth';
 
   function updateActiveDot() {
     if (!strip || !dotsContainer || strip.clientWidth === 0) return;
@@ -216,7 +225,7 @@ const { photos, alt } = Astro.props;
       dot.className = 'photo-gallery__dot';
       dot.setAttribute('aria-label', `Ir a la sección ${i + 1} de fotos`);
       dot.addEventListener('click', () => {
-        strip.scrollTo({ left: i * strip.clientWidth, behavior: 'smooth' });
+        strip.scrollTo({ left: i * strip.clientWidth, behavior: scrollBehavior });
       });
       dotsContainer.appendChild(dot);
     }
@@ -228,12 +237,12 @@ const { photos, alt } = Astro.props;
   strip?.querySelectorAll('img').forEach((img) => img.addEventListener('load', buildDots));
   buildDots();
 
-  stripPrev?.addEventListener('click', () => strip?.scrollBy({ left: -(strip.clientWidth), behavior: 'smooth' }));
-  stripNext?.addEventListener('click', () => strip?.scrollBy({ left: strip.clientWidth, behavior: 'smooth' }));
+  stripPrev?.addEventListener('click', () => strip?.scrollBy({ left: -(strip.clientWidth), behavior: scrollBehavior }));
+  stripNext?.addEventListener('click', () => strip?.scrollBy({ left: strip.clientWidth, behavior: scrollBehavior }));
 
   gallery?.addEventListener('keydown', (event) => {
-    if (event.key === 'ArrowLeft') strip?.scrollBy({ left: -(strip.clientWidth), behavior: 'smooth' });
-    if (event.key === 'ArrowRight') strip?.scrollBy({ left: strip.clientWidth, behavior: 'smooth' });
+    if (event.key === 'ArrowLeft') strip?.scrollBy({ left: -(strip.clientWidth), behavior: scrollBehavior });
+    if (event.key === 'ArrowRight') strip?.scrollBy({ left: strip.clientWidth, behavior: scrollBehavior });
   });
 
   const dialog = document.querySelector<HTMLDialogElement>('[data-photo-dialog]');
@@ -248,6 +257,7 @@ const { photos, alt } = Astro.props;
     if (!dialogImage || triggers.length === 0) return;
     currentIndex = (index + triggers.length) % triggers.length;
     dialogImage.src = triggers[currentIndex].dataset.src ?? '';
+    dialogImage.alt = triggers[currentIndex].dataset.alt ?? '';
   }
 
   triggers.forEach((trigger, index) => {
