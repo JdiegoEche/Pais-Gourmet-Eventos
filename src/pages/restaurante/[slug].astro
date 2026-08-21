@@ -3,9 +3,9 @@ import Layout from '../../layouts/Layout.astro';
 import PhotoGallery from '../../components/PhotoGallery.astro';
 import ReviewForm from '../../components/ReviewForm.astro';
 import ReviewList from '../../components/ReviewList.astro';
-import RestaurantCard from '../../components/RestaurantCard.astro';
 import ShareButtons from '../../components/ShareButtons.astro';
-import { getAllRestaurants, getReviews, getRelatedRestaurants } from '../../lib/data';
+import WeeklyRecommended from '../../components/WeeklyRecommended.astro';
+import { getAllRestaurants, getReviews, getWeeklyRecommendedRestaurants } from '../../lib/data';
 import type { Restaurant } from '../../types';
 
 export async function getStaticPaths() {
@@ -22,7 +22,7 @@ interface Props {
 
 const { restaurant } = Astro.props;
 const reviews = await getReviews(restaurant.slug);
-const relatedRestaurants = await getRelatedRestaurants(restaurant);
+const weeklyRecommended = await getWeeklyRecommendedRestaurants(restaurant.slug);
 
 const menuCategories = ['entrantes', 'fuerte', 'postre'] as const;
 
@@ -339,17 +339,9 @@ const videoEmbedUrl = youtubeEmbedUrl(restaurant.youtubeVideoUrl);
       <ReviewForm restaurantSlug={restaurant.slug} />
     </section>
 
-    {relatedRestaurants.length > 0 && (
-      <section class="restaurant-detail__related">
-        <h2>Recomendados para ti</h2>
-        <div class="restaurant-detail__related-grid">
-          {relatedRestaurants.map((related) => (
-            <RestaurantCard restaurant={related} />
-          ))}
-        </div>
-      </section>
-    )}
   </article>
+
+  <WeeklyRecommended restaurants={weeklyRecommended} />
 </Layout>
 
 <style>
@@ -562,14 +554,6 @@ const videoEmbedUrl = youtubeEmbedUrl(restaurant.youtubeVideoUrl);
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--spacing-lg);
-  }
-  .restaurant-detail__related h2 {
-    color: var(--color-primary-dark);
-  }
-  .restaurant-detail__related-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: var(--spacing-md);
   }
   @media (max-width: 720px) {
     .restaurant-detail__grid,

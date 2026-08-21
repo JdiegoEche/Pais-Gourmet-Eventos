@@ -96,6 +96,14 @@ export default defineType({
       ],
     }),
     defineField({
+      name: 'weeklyRecommendedEnabled',
+      title: 'Mostrar "Recomendados de la semana"',
+      description:
+        'Prende o apaga la sección de recomendados que aparece al final de cada página de restaurante. Los restaurantes que se muestran son aleatorios, no se eligen a mano.',
+      type: 'boolean',
+      initialValue: false,
+    }),
+    defineField({
       name: 'banners',
       title: 'Banners rotativos (home)',
       description: 'Imágenes del banner que rota cada 3 segundos en el home',

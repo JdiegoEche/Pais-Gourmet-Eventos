@@ -3,6 +3,17 @@ import type { CreateReviewInput, CreateReviewReplyInput, CreateLeadSignupInput }
 
 const useMock = !import.meta.env.SANITY_PROJECT_ID;
 
+const MAX_WEEKLY_RECOMMENDED = 4;
+
+function shuffle<T>(items: T[]): T[] {
+  const result = [...items];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
 async function eventRepository() {
   if (useMock) {
     const { MockEventRepository } = await import('./repositories/mock/MockEventRepository');
@@ -62,9 +73,12 @@ export async function getRestaurantBySlug(slug: string): Promise<Restaurant | nu
   return (await restaurantRepository()).getBySlug(slug);
 }
 
-export async function getRelatedRestaurants(restaurant: Restaurant): Promise<Restaurant[]> {
-  if (restaurant.relatedRestaurantSlugs.length === 0) return [];
-  return (await restaurantRepository()).getFeatured(restaurant.relatedRestaurantSlugs);
+export async function getWeeklyRecommendedRestaurants(excludeSlug: string): Promise<Restaurant[]> {
+  const event = await getEvent();
+  if (!event?.weeklyRecommendedEnabled) return [];
+  const all = await (await restaurantRepository()).getAll();
+  const candidates = all.filter((restaurant) => restaurant.slug !== excludeSlug);
+  return shuffle(candidates).slice(0, MAX_WEEKLY_RECOMMENDED);
 }
 
 export async function getReviews(restaurantSlug: string): Promise<Review[]> {

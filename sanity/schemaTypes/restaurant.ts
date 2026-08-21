@@ -124,17 +124,6 @@ export default defineType({
         }),
       ],
     }),
-    defineField({
-      name: 'relatedRestaurants',
-      title: 'Restaurantes relacionados',
-      type: 'array',
-      of: [
-        defineArrayMember({
-          type: 'reference',
-          to: [{type: 'restaurant'}],
-        }),
-      ],
-    }),
   ],
   preview: {
     select: {title: 'name', subtitle: 'zone', media: 'gallery.0'},

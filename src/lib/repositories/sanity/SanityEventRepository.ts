@@ -18,6 +18,7 @@ export class SanityEventRepository implements EventRepository {
         "featuredRestaurantSlugs": featuredRestaurants[]->slug.current,
         heroRecommendedEnabled,
         "heroRecommendedRestaurantSlugs": heroRecommendedRestaurants[]->slug.current,
+        weeklyRecommendedEnabled,
         "banners": banners[].asset->url,
         "sponsorLogos": sponsorLogos[]{name, "imageUrl": image.asset->url}
       }`,

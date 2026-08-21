@@ -26,6 +26,7 @@ export const mockEvent: EventData = {
   featuredRestaurantSlugs: ['la-tulpa-fuego-y-cafe', 'umami-ramen-bar', 'el-fogon-criollo'],
   heroRecommendedEnabled: true,
   heroRecommendedRestaurantSlugs: ['la-tulpa-fuego-y-cafe', 'umami-ramen-bar', 'el-fogon-criollo', 'trattoria-girasol'],
+  weeklyRecommendedEnabled: true,
   banners: [
     'https://picsum.photos/seed/banner-1/1600/500',
     'https://picsum.photos/seed/banner-2/1600/500',
@@ -98,7 +99,6 @@ export const mockRestaurants: Restaurant[] = [
     menuHighlights: [],
     vegetarianOption: false,
     gallery: gallery('la-tulpa-fuego-y-cafe', 5),
-    relatedRestaurantSlugs: ['sazon-del-eje', 'el-fogon-criollo'],
   },
   {
     slug: 'trattoria-girasol',
@@ -138,7 +138,6 @@ export const mockRestaurants: Restaurant[] = [
     menuHighlights: [],
     vegetarianOption: true,
     gallery: gallery('trattoria-girasol', 6),
-    relatedRestaurantSlugs: ['verde-oliva-bistro'],
   },
   {
     slug: 'sazon-del-eje',
@@ -168,7 +167,6 @@ export const mockRestaurants: Restaurant[] = [
     menuHighlights: [],
     vegetarianOption: false,
     gallery: gallery('sazon-del-eje', 4),
-    relatedRestaurantSlugs: ['la-tulpa-fuego-y-cafe'],
   },
   {
     slug: 'umami-ramen-bar',
@@ -199,7 +197,6 @@ export const mockRestaurants: Restaurant[] = [
     menuHighlights: [],
     vegetarianOption: true,
     gallery: gallery('umami-ramen-bar', 5),
-    relatedRestaurantSlugs: ['trattoria-girasol', 'verde-oliva-bistro'],
   },
   {
     slug: 'el-fogon-criollo',
@@ -230,7 +227,6 @@ export const mockRestaurants: Restaurant[] = [
     menuHighlights: [],
     vegetarianOption: false,
     gallery: gallery('el-fogon-criollo', 6),
-    relatedRestaurantSlugs: ['la-tulpa-fuego-y-cafe', 'sazon-del-eje'],
   },
   {
     slug: 'verde-oliva-bistro',
@@ -260,7 +256,6 @@ export const mockRestaurants: Restaurant[] = [
     menuHighlights: [],
     vegetarianOption: true,
     gallery: gallery('verde-oliva-bistro', 4),
-    relatedRestaurantSlugs: ['trattoria-girasol', 'umami-ramen-bar'],
   },
 ];
 
@@ -419,7 +414,6 @@ function generateRestaurants(count: number): Restaurant[] {
       menuHighlights: [],
       vegetarianOption: i % 3 === 0,
       gallery: gallery(slug, 4),
-      relatedRestaurantSlugs: [],
     });
   }
 

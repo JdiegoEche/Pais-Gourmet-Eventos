@@ -1,0 +1,60 @@
+---
+import type { Restaurant } from '../types';
+import RestaurantCard from './RestaurantCard.astro';
+
+interface Props {
+  restaurants: Restaurant[];
+}
+
+const { restaurants } = Astro.props;
+---
+
+{restaurants.length > 0 && (
+  <section class="weekly-recommended">
+    <h2>Recomendados de la semana</h2>
+    <div class="weekly-recommended__grid">
+      {restaurants.map((restaurant) => <RestaurantCard restaurant={restaurant} />)}
+    </div>
+  </section>
+)}
+
+<style>
+  .weekly-recommended {
+    padding: var(--spacing-lg) var(--spacing-md);
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .weekly-recommended h2 {
+    color: var(--color-primary-dark);
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 0 0 var(--spacing-md);
+  }
+  .weekly-recommended__grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+  }
+  .weekly-recommended__grid > :global(a:nth-child(n + 3)) {
+    display: none;
+  }
+  @media (min-width: 640px) {
+    .weekly-recommended__grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .weekly-recommended__grid > :global(a:nth-child(n + 3)) {
+      display: flex;
+    }
+    .weekly-recommended__grid > :global(a:nth-child(n + 4)) {
+      display: none;
+    }
+  }
+  @media (min-width: 1024px) {
+    .weekly-recommended__grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .weekly-recommended__grid > :global(a:nth-child(n + 4)) {
+      display: flex;
+    }
+  }
+</style>

@@ -11,6 +11,7 @@ export interface EventData {
   featuredRestaurantSlugs: string[];
   heroRecommendedEnabled: boolean;
   heroRecommendedRestaurantSlugs: string[];
+  weeklyRecommendedEnabled: boolean;
   banners: string[];
   sponsorLogos: { name: string; imageUrl: string }[];
 }
@@ -74,7 +75,6 @@ export interface Restaurant {
   vegetarianOption: boolean;
   features: RestaurantFeatures;
   gallery: string[];
-  relatedRestaurantSlugs: string[];
 }
 
 export interface ReviewReply {
