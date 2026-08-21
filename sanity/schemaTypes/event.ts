@@ -78,15 +78,15 @@ export default defineType({
       ],
     }),
     defineField({
-      name: 'weeklyRecommendedEnabled',
-      title: 'Mostrar "Recomendados de la semana"',
-      description: 'Prende o apaga la sección de recomendados de la semana en el home',
+      name: 'heroRecommendedEnabled',
+      title: 'Mostrar "Restaurantes recomendados"',
+      description: 'Prende o apaga el carrusel de restaurantes recomendados del home',
       type: 'boolean',
       initialValue: false,
     }),
     defineField({
-      name: 'weeklyRecommendedRestaurants',
-      title: 'Restaurantes recomendados de la semana',
+      name: 'heroRecommendedRestaurants',
+      title: 'Restaurantes recomendados',
       type: 'array',
       of: [
         defineArrayMember({

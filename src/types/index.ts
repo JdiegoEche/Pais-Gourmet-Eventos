@@ -9,8 +9,8 @@ export interface EventData {
   zones: string[];
   zoneShowcase: ZoneShowcaseItem[];
   featuredRestaurantSlugs: string[];
-  weeklyRecommendedEnabled: boolean;
-  weeklyRecommendedRestaurantSlugs: string[];
+  heroRecommendedEnabled: boolean;
+  heroRecommendedRestaurantSlugs: string[];
   banners: string[];
   sponsorLogos: { name: string; imageUrl: string }[];
 }

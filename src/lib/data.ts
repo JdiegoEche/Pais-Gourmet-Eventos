@@ -48,10 +48,10 @@ export async function getFeaturedRestaurants(): Promise<Restaurant[]> {
   return (await restaurantRepository()).getFeatured(event?.featuredRestaurantSlugs ?? []);
 }
 
-export async function getWeeklyRecommendedRestaurants(): Promise<Restaurant[]> {
+export async function getHeroRecommendedRestaurants(): Promise<Restaurant[]> {
   const event = await getEvent();
-  if (!event?.weeklyRecommendedEnabled) return [];
-  return (await restaurantRepository()).getFeatured(event.weeklyRecommendedRestaurantSlugs ?? []);
+  if (!event?.heroRecommendedEnabled) return [];
+  return (await restaurantRepository()).getFeatured(event.heroRecommendedRestaurantSlugs ?? []);
 }
 
 export async function getAllRestaurants(): Promise<Restaurant[]> {
