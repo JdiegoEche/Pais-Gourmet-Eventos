@@ -9,4 +9,9 @@ export default defineConfig({
   image: {
     remotePatterns: [{ protocol: 'https', hostname: 'cdn.sanity.io' }, { protocol: 'https', hostname: 'picsum.photos' }],
   },
+  vite: {
+    server: {
+      allowedHosts: ['.trycloudflare.com'],
+    },
+  },
 });

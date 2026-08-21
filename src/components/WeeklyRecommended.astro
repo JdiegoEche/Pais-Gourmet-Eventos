@@ -35,17 +35,17 @@ const { restaurants } = Astro.props;
     grid-template-columns: repeat(2, 1fr);
     gap: var(--spacing-md);
   }
-  .weekly-recommended__grid > :global(a:nth-child(n + 3)) {
+  .weekly-recommended__grid > :global(a:nth-of-type(n + 3)) {
     display: none;
   }
   @media (min-width: 640px) {
     .weekly-recommended__grid {
       grid-template-columns: repeat(3, 1fr);
     }
-    .weekly-recommended__grid > :global(a:nth-child(n + 3)) {
+    .weekly-recommended__grid > :global(a:nth-of-type(n + 3)) {
       display: flex;
     }
-    .weekly-recommended__grid > :global(a:nth-child(n + 4)) {
+    .weekly-recommended__grid > :global(a:nth-of-type(n + 4)) {
       display: none;
     }
   }
@@ -53,7 +53,7 @@ const { restaurants } = Astro.props;
     .weekly-recommended__grid {
       grid-template-columns: repeat(4, 1fr);
     }
-    .weekly-recommended__grid > :global(a:nth-child(n + 4)) {
+    .weekly-recommended__grid > :global(a:nth-of-type(n + 4)) {
       display: flex;
     }
   }

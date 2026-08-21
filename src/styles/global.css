@@ -1,13 +1,13 @@
 :root {
-  --color-bg: #f8f8f8;
-  --color-surface: #ffffff;
-  --color-primary: #c1440e;
-  --color-primary-dark: #8a3208;
-  --color-accent: #e3a857;
-  --color-accent-dark: #9c6a1f; /* misma tonalidad que --color-accent, oscurecida para dar 4.5:1 sobre --color-surface (WCAG AA texto) */
-  --color-text: #2b2118;
-  --color-text-muted: #6b5c4d;
-  --color-border: #e8dcc8;
+  --color-bg: #f8f8f8; /* fondo general de la página (body) */
+  --color-surface: #ffffff; /* fondo de tarjetas, header y secciones elevadas */
+  --color-primary: #f5d834; /* fondo de botones y elementos destacados (amarillo) */
+  --color-primary-dark: #161615; /* texto sobre fondos claros: títulos, links, hover de botones primary */
+  --color-accent: #e3a857; /* fondo secundario: badges, botones de compartir */
+  --color-accent-dark: #9c6a1f; /* texto sobre fondo accent/surface (p. ej. estrellas de reseñas); misma tonalidad que --color-accent, oscurecida para dar 4.5:1 sobre --color-surface (WCAG AA texto) */
+  --color-text: #2b2118; /* color de texto principal */
+  --color-text-muted: #6b5c4d; /* texto secundario: descripciones, metadatos */
+  --color-border: #e8dcc8; /* bordes y separadores */
 
   --font-heading: Georgia, 'Times New Roman', serif;
   --font-body: system-ui, -apple-system, 'Segoe UI', sans-serif;
