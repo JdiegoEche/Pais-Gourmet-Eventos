@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { getSanityWriteClient } from '../../../../lib/sanity';
+import { isRateLimited } from '../../../../lib/rateLimit';
 
 export const prerender = false;
 
@@ -7,7 +8,20 @@ export const prerender = false;
 // (evita mandar metadata JSON aparte de los binarios).
 const FIELD_PREFIX = 'photo::';
 
-export const POST: APIRoute = async ({ request }) => {
+// La compresión de imágenes es solo client-side (ver script de carga-masiva.astro) — un script
+// que le pegue directo a la API podría saltearla, así que acá se valida de nuevo en el servidor.
+const MAX_FILE_SIZE = 8 * 1024 * 1024; // 8MB
+const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+
+export const POST: APIRoute = async (context) => {
+  const { request } = context;
+
+  if (await isRateLimited(context, 'RATE_LIMITER_WRITE')) {
+    return new Response(JSON.stringify({ error: 'Demasiadas solicitudes. Esperá un minuto e intentá de nuevo.' }), {
+      status: 429,
+    });
+  }
+
   let formData: FormData;
   try {
     formData = await request.formData();
@@ -32,6 +46,15 @@ export const POST: APIRoute = async ({ request }) => {
   const results: { restaurantId: string; uploaded: number; error?: string }[] = [];
 
   for (const [restaurantId, files] of byRestaurant) {
+    const invalidFile = files.find((f) => !ALLOWED_IMAGE_TYPES.has(f.type) || f.size > MAX_FILE_SIZE);
+    if (invalidFile) {
+      results.push({
+        restaurantId,
+        uploaded: 0,
+        error: `Archivo inválido (${invalidFile.name}): tipo no permitido o supera ${MAX_FILE_SIZE / (1024 * 1024)}MB`,
+      });
+      continue;
+    }
     try {
       const gallery = [];
       for (const file of files) {

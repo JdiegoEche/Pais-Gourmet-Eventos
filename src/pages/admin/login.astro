@@ -1,0 +1,125 @@
+---
+import Layout from '../../layouts/Layout.astro';
+
+export const prerender = false;
+---
+
+<Layout title="Iniciar sesión — Admin">
+  <section class="login">
+    <h1>Panel de administración</h1>
+    <p class="login__intro">Ingresá la contraseña del equipo para continuar.</p>
+
+    <form id="login-form" class="login__form">
+      <label class="login__field">
+        Contraseña
+        <input type="password" id="password" name="password" autocomplete="current-password" required />
+      </label>
+      <button type="submit">Ingresar</button>
+    </form>
+
+    <p class="login__status" id="status" role="status"></p>
+  </section>
+</Layout>
+
+<style>
+  .login {
+    max-width: 420px;
+    margin: 0 auto;
+    padding: var(--spacing-lg) var(--spacing-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+  .login h1 {
+    color: var(--color-primary-dark);
+    margin: 0;
+  }
+  .login__intro {
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+  .login__form {
+    padding: var(--spacing-md);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+  .login__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.9rem;
+    color: var(--color-text);
+  }
+  input {
+    padding: 0.5rem 0.6rem;
+    border: 1px solid var(--color-border);
+    border-radius: calc(var(--radius) / 2);
+    font: inherit;
+  }
+  button {
+    align-self: flex-start;
+    padding: 0.6rem 1.5rem;
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.1s ease, opacity 0.1s ease;
+  }
+  button:active:not(:disabled) {
+    transform: scale(0.96);
+  }
+  button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .login__status {
+    min-height: 1.2em;
+    color: var(--color-text-muted);
+  }
+  .login__status[data-state='error'] {
+    color: #b3261e;
+  }
+</style>
+
+<script>
+  const form = document.getElementById('login-form') as HTMLFormElement;
+  const status = document.getElementById('status') as HTMLElement;
+
+  function setStatus(message: string, isError = false) {
+    status.textContent = message;
+    status.dataset.state = isError ? 'error' : '';
+  }
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const button = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+    const password = (document.getElementById('password') as HTMLInputElement).value;
+
+    button.disabled = true;
+    setStatus('Verificando...');
+
+    try {
+      const response = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setStatus(body.error ?? 'No se pudo iniciar sesión.', true);
+        button.disabled = false;
+        return;
+      }
+      window.location.href = '/admin/carga-masiva';
+    } catch {
+      setStatus('Error de red. Intentá de nuevo.', true);
+      button.disabled = false;
+    }
+  });
+</script>
