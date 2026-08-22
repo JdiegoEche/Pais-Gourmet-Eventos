@@ -21,6 +21,14 @@ const { cuisineTypes, zones, deliveryZones, priceRanges } = Astro.props;
         data-filter-search
       />
     </div>
+    <div class="restaurant-filters__field restaurant-filters__sort-field">
+      <label for="filter-sort">Ordenar por</label>
+      <select id="filter-sort" name="sort" data-filter-sort>
+        <option value="random" selected>Aleatorio</option>
+        <option value="az">A-Z</option>
+        <option value="votes">Más votados</option>
+      </select>
+    </div>
     <button type="button" class="restaurant-filters__toggle" data-filters-toggle aria-expanded="false">
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
         <polygon points="22 3 2 3 10 12.5 10 20 14 22 14 12.5 22 3" />
@@ -174,11 +182,16 @@ const { cuisineTypes, zones, deliveryZones, priceRanges } = Astro.props;
   @media (max-width: 768px) {
     .restaurant-filters__bar {
       flex-direction: row;
+      flex-wrap: wrap;
       align-items: center;
       gap: var(--spacing-sm);
     }
     .restaurant-filters__search-field {
-      flex: 1;
+      flex: 1 1 100%;
+      min-width: 0;
+    }
+    .restaurant-filters__sort-field {
+      flex: 1 1 auto;
       min-width: 0;
     }
     .restaurant-filters__search-label {
@@ -218,9 +231,13 @@ const { cuisineTypes, zones, deliveryZones, priceRanges } = Astro.props;
   const grid = document.querySelector<HTMLElement>('[data-restaurant-grid]');
   const counter = document.querySelector<HTMLElement>('[data-results-count]');
   const searchInput = document.querySelector<HTMLInputElement>('[data-filter-search]');
+  const sortSelect = document.querySelector<HTMLSelectElement>('[data-filter-sort]');
   const filtersToggle = document.querySelector<HTMLButtonElement>('[data-filters-toggle]');
   const filtersPanel = document.querySelector<HTMLElement>('[data-filters-panel]');
-  const cards = grid ? Array.from(grid.querySelectorAll<HTMLElement>('[data-restaurant-card]')) : [];
+  // "let": sortCards() reordena este array (no solo el DOM) para que revealVisible() pagine
+  // en el orden ya ordenado, no en el orden original de llegada del servidor.
+  let cards = grid ? Array.from(grid.querySelectorAll<HTMLElement>('[data-restaurant-card]')) : [];
+  cards.forEach((card, i) => (card.dataset.originalIndex = String(i)));
 
   function normalize(value: string): string {
     return value
@@ -298,7 +315,40 @@ const { cuisineTypes, zones, deliveryZones, priceRanges } = Astro.props;
     if (counter) counter.textContent = String(Math.min(visibleCount, totalMatches));
   }
 
+  // Solo se recuerda para saber si "Aleatorio" se acaba de elegir (y hay que barajar de
+  // nuevo) o si sigue igual que antes (y hay que mantener el orden ya barajado). Arranca en
+  // `null` (no en el valor actual del <select>) para que la primera llamada SIEMPRE baraje,
+  // incluso cuando "Aleatorio" ya viene seleccionado por defecto al cargar la página.
+  let previousSort: string | null = null;
+
+  function sortCards() {
+    if (!grid) return;
+    const sortValue = sortSelect?.value ?? '';
+
+    if (sortValue === 'random' && previousSort !== 'random') {
+      cards.forEach((card) => (card.dataset.randomKey = String(Math.random())));
+    }
+    previousSort = sortValue;
+
+    const sorted = [...cards];
+    if (sortValue === 'az') {
+      sorted.sort((a, b) => normalize(a.dataset.name ?? '').localeCompare(normalize(b.dataset.name ?? '')));
+    } else if (sortValue === 'votes') {
+      sorted.sort((a, b) => Number(b.dataset.reviewCount ?? 0) - Number(a.dataset.reviewCount ?? 0));
+    } else if (sortValue === 'random') {
+      sorted.sort((a, b) => Number(a.dataset.randomKey ?? 0) - Number(b.dataset.randomKey ?? 0));
+    } else {
+      sorted.sort((a, b) => Number(a.dataset.originalIndex ?? 0) - Number(b.dataset.originalIndex ?? 0));
+    }
+
+    // appendChild sobre un nodo ya insertado lo MUEVE (no lo duplica): recorrer en el orden
+    // final deseado y reinsertar así reordena visualmente la grilla entera.
+    sorted.forEach((card) => grid.appendChild(card));
+    cards = sorted;
+  }
+
   function applyFilters() {
+    sortCards();
     cards.forEach((card) => {
       card.dataset.filterMatch = String(matchesFilters(card));
     });
@@ -319,6 +369,7 @@ const { cuisineTypes, zones, deliveryZones, priceRanges } = Astro.props;
   if (sentinel) observer.observe(sentinel);
 
   form?.addEventListener('change', applyFilters);
+  sortSelect?.addEventListener('change', applyFilters);
   searchInput?.addEventListener('input', () => {
     searchQuery = normalize(searchInput.value);
     applyFilters();
@@ -328,6 +379,7 @@ const { cuisineTypes, zones, deliveryZones, priceRanges } = Astro.props;
     form?.querySelectorAll<HTMLSelectElement>('select').forEach((el) => (el.value = ''));
     if (searchInput) searchInput.value = '';
     searchQuery = '';
+    if (sortSelect) sortSelect.value = 'random';
     applyFilters();
   });
 

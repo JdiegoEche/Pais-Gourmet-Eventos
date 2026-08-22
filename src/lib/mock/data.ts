@@ -99,6 +99,7 @@ export const mockRestaurants: Restaurant[] = [
     menuHighlights: [],
     vegetarianOption: false,
     gallery: gallery('la-tulpa-fuego-y-cafe', 5),
+    reviewCount: 2,
   },
   {
     slug: 'trattoria-girasol',
@@ -138,6 +139,7 @@ export const mockRestaurants: Restaurant[] = [
     menuHighlights: [],
     vegetarianOption: true,
     gallery: gallery('trattoria-girasol', 6),
+    reviewCount: 2,
   },
   {
     slug: 'sazon-del-eje',
@@ -167,6 +169,7 @@ export const mockRestaurants: Restaurant[] = [
     menuHighlights: [],
     vegetarianOption: false,
     gallery: gallery('sazon-del-eje', 4),
+    reviewCount: 2,
   },
   {
     slug: 'umami-ramen-bar',
@@ -197,6 +200,7 @@ export const mockRestaurants: Restaurant[] = [
     menuHighlights: [],
     vegetarianOption: true,
     gallery: gallery('umami-ramen-bar', 5),
+    reviewCount: 2,
   },
   {
     slug: 'el-fogon-criollo',
@@ -227,6 +231,7 @@ export const mockRestaurants: Restaurant[] = [
     menuHighlights: [],
     vegetarianOption: false,
     gallery: gallery('el-fogon-criollo', 6),
+    reviewCount: 2,
   },
   {
     slug: 'verde-oliva-bistro',
@@ -256,6 +261,7 @@ export const mockRestaurants: Restaurant[] = [
     menuHighlights: [],
     vegetarianOption: true,
     gallery: gallery('verde-oliva-bistro', 4),
+    reviewCount: 2,
   },
 ];
 
@@ -414,6 +420,7 @@ function generateRestaurants(count: number): Restaurant[] {
       menuHighlights: [],
       vegetarianOption: i % 3 === 0,
       gallery: gallery(slug, 4),
+      reviewCount: (i * 7) % 35,
     });
   }
 

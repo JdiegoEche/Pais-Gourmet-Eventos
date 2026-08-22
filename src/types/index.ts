@@ -75,6 +75,7 @@ export interface Restaurant {
   vegetarianOption: boolean;
   features: RestaurantFeatures;
   gallery: string[];
+  reviewCount: number;
 }
 
 export interface ReviewReply {

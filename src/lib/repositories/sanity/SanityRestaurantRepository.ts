@@ -20,7 +20,8 @@ const restaurantProjection = `{
   youtubeVideoUrl,
   vegetarianOption,
   features,
-  "gallery": gallery[].asset->url
+  "gallery": gallery[].asset->url,
+  "reviewCount": count(*[_type == "review" && references(^._id)])
 }`;
 
 export class SanityRestaurantRepository implements RestaurantRepository {

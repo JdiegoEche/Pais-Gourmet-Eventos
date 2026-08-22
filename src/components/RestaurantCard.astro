@@ -25,6 +25,7 @@ const galleryUrls = restaurant.gallery.length > 0 ? restaurant.gallery.map((url)
   data-vegetarian={restaurant.vegetarianOption}
   data-features={activeFeatures.join('|')}
   data-name={restaurant.name}
+  data-review-count={restaurant.reviewCount}
 >
   <div class="restaurant-card__image" data-carousel data-gallery={galleryUrls.join('|')}>
     <img src={galleryUrls[0]} alt={restaurant.name} loading="lazy" decoding="async" width="480" height="480" data-carousel-img />
