@@ -101,7 +101,15 @@ const events = await sanity.fetch<EventOption[]>(
         Restaurante
         <select id="photo-restaurant-select"></select>
       </label>
-      <div id="photos-dropzone" class="import__dropzone">Soltá las fotos de este restaurante acá, o hacé clic para elegirlas</div>
+      <div
+        id="photos-dropzone"
+        class="import__dropzone"
+        role="button"
+        tabindex="0"
+        aria-label="Elegir fotos de este restaurante"
+      >
+        Soltá las fotos de este restaurante acá, o hacé clic para elegirlas
+      </div>
       <input type="file" id="photos-input" accept="image/*" multiple hidden />
       <div id="photos-preview" class="import__photo-tray"></div>
       <button type="button" id="btn-upload-photos">Subir fotos para este restaurante</button>
@@ -184,6 +192,7 @@ const events = await sanity.fetch<EventOption[]>(
   }
   button {
     align-self: flex-start;
+    min-height: 44px;
     padding: 0.6rem 1.5rem;
     background: var(--color-primary);
     color: white;
@@ -227,6 +236,10 @@ const events = await sanity.fetch<EventOption[]>(
   .import__dropzone[data-active='true'] {
     border-color: var(--color-primary);
     color: var(--color-text);
+  }
+  .import__dropzone:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
   }
   .import__photo-tray {
     display: flex;
@@ -462,6 +475,7 @@ const events = await sanity.fetch<EventOption[]>(
       const img = document.createElement('img');
       img.className = 'import__thumb';
       img.src = URL.createObjectURL(file);
+      img.alt = file.name;
       img.title = file.name;
       preview.appendChild(img);
     }
@@ -498,6 +512,14 @@ const events = await sanity.fetch<EventOption[]>(
     }
 
     dropzone.addEventListener('click', () => photosInput.click());
+    dropzone.addEventListener('keydown', (e) => {
+      // Un <div role="button"> no abre el picker de archivos con Enter/Space por sí solo
+      // (a diferencia de un <button> nativo) — hay que engancharlo a mano.
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        photosInput.click();
+      }
+    });
     photosInput.addEventListener('change', () => {
       if (photosInput.files) addFiles([...photosInput.files]);
       photosInput.value = '';
