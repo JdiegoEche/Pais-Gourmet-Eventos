@@ -1,4 +1,5 @@
 import type { APIContext } from 'astro';
+import { getClientAddress } from './clientAddress';
 
 type LimiterBinding = 'RATE_LIMITER' | 'RATE_LIMITER_WRITE';
 
@@ -10,10 +11,8 @@ export async function isRateLimited(
   context: Pick<APIContext, 'clientAddress'>,
   binding: LimiterBinding = 'RATE_LIMITER'
 ): Promise<boolean> {
-  // "astro dev" plano (Node) no tiene el runtime de Cloudflare Workers, y el adapter de
-  // Cloudflare no expone `Astro.clientAddress` fuera de "wrangler dev"/producción (tira una
-  // excepción al leerlo, no un undefined): todo este bloque se deja pasar sin rate limit si
-  // falla por cualquiera de los dos motivos, tal como ya hacía este helper.
+  // "astro dev" plano (Node) no tiene el runtime de Cloudflare Workers: se deja pasar sin
+  // rate limit si falla la importación del binding.
   try {
     const { env } = await import('cloudflare:workers');
     const limiter = env[binding];
@@ -27,7 +26,7 @@ export async function isRateLimited(
       return false;
     }
 
-    const { success } = await limiter.limit({ key: context.clientAddress });
+    const { success } = await limiter.limit({ key: getClientAddress(context) ?? 'unknown' });
     return !success;
   } catch {
     return false;
