@@ -14,7 +14,9 @@ export type CreateReviewInput = Omit<Review, 'id' | 'createdAt' | 'replies'>;
 export type CreateReviewReplyInput = Omit<ReviewReply, 'createdAt'>;
 
 export interface ReviewRepository {
-  getByRestaurant(restaurantSlug: string): Promise<Review[]>;
+  // fresh: true salta cualquier caché (ej. CDN) para ver una escritura recién hecha; sin él,
+  // el caller acepta la lectura más barata/cacheada disponible.
+  getByRestaurant(restaurantSlug: string, options?: { fresh?: boolean }): Promise<Review[]>;
   create(input: CreateReviewInput): Promise<Review>;
   addReply(reviewId: string, input: CreateReviewReplyInput): Promise<ReviewReply>;
 }

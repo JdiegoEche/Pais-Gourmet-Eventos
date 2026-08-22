@@ -86,8 +86,8 @@ export async function getWeeklyRecommendedRestaurants(
   return shuffle(candidates).slice(0, MAX_WEEKLY_RECOMMENDED);
 }
 
-export async function getReviews(restaurantSlug: string): Promise<Review[]> {
-  return (await reviewRepository()).getByRestaurant(restaurantSlug);
+export async function getReviews(restaurantSlug: string, options?: { fresh?: boolean }): Promise<Review[]> {
+  return (await reviewRepository()).getByRestaurant(restaurantSlug, options);
 }
 
 export type { CreateReviewInput, CreateReviewReplyInput, CreateLeadSignupInput };

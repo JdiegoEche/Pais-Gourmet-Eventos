@@ -94,7 +94,10 @@ export const GET: APIRoute = async ({ url }) => {
   if (!restaurantSlug) {
     return new Response(JSON.stringify({ error: 'Falta el parámetro restaurant' }), { status: 400 });
   }
-  const reviews = await getReviews(restaurantSlug);
+  // fresh: true — este endpoint es al que ReviewList.astro le pega justo después de publicar
+  // una reseña propia; con la lectura cacheada por CDN, esa reseña recién creada no aparecía
+  // hasta el próximo refresh.
+  const reviews = await getReviews(restaurantSlug, { fresh: true });
   // Nunca se exponen phone/email (ni de la reseña ni de sus respuestas): son datos privados para la base de leads.
   const publicReviews = reviews.map(({ id, name, rating, foodRating, serviceRating, ambianceRating, comment, createdAt, replies }) => ({
     id,
