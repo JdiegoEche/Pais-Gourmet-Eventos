@@ -15,7 +15,7 @@ export class SanityReviewRepository implements ReviewRepository {
         ambianceRating,
         comment,
         createdAt,
-        "replies": replies[]{ name, message, createdAt }
+        "replies": coalesce(replies[]{ name, message, createdAt }, [])
       }`,
       { slug: restaurantSlug }
     );
@@ -24,8 +24,12 @@ export class SanityReviewRepository implements ReviewRepository {
   async create(input: CreateReviewInput): Promise<Review> {
     const createdAt = new Date().toISOString();
     const client = getSanityWriteClient();
+    // Excluye borradores explícitamente: si un restaurante tiene una edición sin publicar,
+    // "slug.current == $slug" matchea tanto el draft como el publicado, y sin este filtro el
+    // orden no está garantizado — puede terminar guardando una referencia a "drafts.xxx", que
+    // el resto del sitio (perspectiva "published") nunca puede resolver.
     const restaurantId = await client.fetch<string | null>(
-      `*[_type == "restaurant" && slug.current == $slug][0]._id`,
+      `*[_type == "restaurant" && slug.current == $slug && !(_id in path("drafts.**"))][0]._id`,
       { slug: input.restaurantSlug }
     );
     if (!restaurantId) {
@@ -43,6 +47,7 @@ export class SanityReviewRepository implements ReviewRepository {
       ambianceRating: input.ambianceRating,
       comment: input.comment,
       createdAt,
+      replies: [],
     });
     return { ...input, id: created._id, createdAt, replies: [] };
   }
