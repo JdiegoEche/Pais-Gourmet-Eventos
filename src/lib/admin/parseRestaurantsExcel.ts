@@ -49,6 +49,16 @@ interface MenuDoc {
   items: MenuItemDoc[];
 }
 
+// Forma real de un ítem de "gallery" ya subido (ver restaurants/photos.ts) — el Excel nunca
+// trae fotos (se suben en un paso aparte), así que el parser siempre produce gallery: [], pero
+// el endpoint de import puede rellenar este campo con la galería ya existente de un restaurante
+// antes de reemplazar el documento, para no perder fotos al reimportar.
+export interface GalleryImageDoc {
+  _type: 'image';
+  _key: string;
+  asset: { _type: 'reference'; _ref: string };
+}
+
 export interface RestaurantDoc {
   _id: string;
   _type: 'restaurant';
@@ -71,7 +81,7 @@ export interface RestaurantDoc {
   cuisineTypes: string[];
   deliveryZones: string[];
   menuHighlights: never[];
-  gallery: never[];
+  gallery: GalleryImageDoc[];
   phone?: string;
   whatsapp?: string;
   instagram?: string;

@@ -52,6 +52,19 @@ export const POST: APIRoute = async (context) => {
   const imported: string[] = [];
   const failed: { name: string; error: string }[] = [];
 
+  // El Excel nunca trae fotos (se suben aparte) y createOrReplace reemplaza el documento
+  // entero — sin esto, reimportar el mismo Excel para corregir un dato borra todas las fotos
+  // ya subidas de cada restaurante. Se preserva la galería existente antes de escribir.
+  const existingGalleries = await client.fetch<{ _id: string; gallery: RestaurantDoc['gallery'] }[]>(
+    `*[_id in $ids && defined(gallery) && count(gallery) > 0]{_id, gallery}`,
+    { ids: validatedDocuments.map((doc) => doc._id) }
+  );
+  const galleryById = new Map(existingGalleries.map((r) => [r._id, r.gallery]));
+  for (const doc of validatedDocuments) {
+    const existingGallery = galleryById.get(doc._id);
+    if (existingGallery) doc.gallery = existingGallery;
+  }
+
   // Un solo POST por restaurante tarda demasiado con listas grandes (167 documentos).
   // Se agrupan en transacciones (createOrReplace por documento, pero un solo viaje de red por lote).
   const BATCH_SIZE = 40;
