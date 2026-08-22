@@ -1,0 +1,576 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { sanity } from '../../lib/sanity';
+
+interface EventOption {
+  _id: string;
+  name: string;
+  slug: string;
+}
+
+const events = await sanity.fetch<EventOption[]>(
+  `*[_type == "event"] | order(_createdAt desc) {_id, name, "slug": slug.current}`
+);
+---
+
+<Layout title="Carga masiva de restaurantes">
+  <section class="import">
+    <h1>Carga masiva de restaurantes</h1>
+    <p class="import__intro">Subí el Excel del formulario de inscripción. Primero se muestra una vista previa — nada se guarda hasta que confirmes.</p>
+
+    <div class="import__step">
+      <h2>1. Evento</h2>
+      <label class="import__field">
+        <input type="radio" name="eventMode" value="existing" checked />
+        Usar un evento existente
+      </label>
+      <select id="event-select" disabled={events.length === 0}>
+        <option value="">— Elegí un evento —</option>
+        {events.map((event) => <option value={event._id}>{event.name} ({event.slug})</option>)}
+      </select>
+      <p class="import__hint">
+        ¿Ya cargaste el Excel de este evento y solo te faltan las fotos? (por ejemplo, si actualizaste la
+        página y perdiste el progreso)
+      </p>
+      <button type="button" id="btn-load-existing-photos">Cargar restaurantes de este evento para subir fotos</button>
+
+      <label class="import__field">
+        <input type="radio" name="eventMode" value="new" />
+        Crear un evento nuevo
+      </label>
+      <div id="new-event-fields" class="import__new-event" hidden>
+        <label class="import__field">
+          Nombre del evento
+          <input type="text" id="event-name" placeholder="Ej: Cali Gourmet 2026" />
+        </label>
+        <label class="import__field">
+          Fecha de inicio
+          <input type="date" id="event-start" />
+        </label>
+        <label class="import__field">
+          Fecha de fin
+          <input type="date" id="event-end" />
+        </label>
+        <label class="import__field">
+          ¿Qué incluye?
+          <textarea id="event-includes" rows="3" placeholder="Ej: 1 entrada, 2 fuertes, 1 postre..."></textarea>
+        </label>
+      </div>
+    </div>
+
+    <div class="import__step">
+      <h2>2. Excel</h2>
+      <label class="import__field">
+        Archivo del formulario (.xlsx)
+        <input type="file" id="excel-file" accept=".xlsx" />
+      </label>
+      <button type="button" id="btn-preview">Previsualizar</button>
+    </div>
+
+    <div class="import__step" id="preview-section" hidden>
+      <h2>3. Revisión</h2>
+      <p id="preview-summary"></p>
+      <details id="preview-skipped">
+        <summary>Restaurantes omitidos</summary>
+        <ul id="preview-skipped-list"></ul>
+      </details>
+      <details id="preview-warnings">
+        <summary>Restaurantes con advertencias (se cargan igual)</summary>
+        <ul id="preview-warnings-list"></ul>
+      </details>
+      <button type="button" id="btn-confirm">Confirmar e importar</button>
+    </div>
+
+    <div class="import__step" id="result-section" hidden>
+      <h2>Listo</h2>
+      <p id="result-summary"></p>
+    </div>
+
+    <div class="import__step" id="photos-section" hidden>
+      <h2>4. Fotos (opcional)</h2>
+      <p class="import__hint">
+        Uno por uno: elegí un restaurante, soltá SUS fotos, confirmá, pasá al siguiente.
+        <span id="photos-progress"></span>
+      </p>
+      <label class="import__field">
+        Restaurante
+        <select id="photo-restaurant-select"></select>
+      </label>
+      <div id="photos-dropzone" class="import__dropzone">Soltá las fotos de este restaurante acá, o hacé clic para elegirlas</div>
+      <input type="file" id="photos-input" accept="image/*" multiple hidden />
+      <div id="photos-preview" class="import__photo-tray"></div>
+      <button type="button" id="btn-upload-photos">Subir fotos para este restaurante</button>
+    </div>
+
+    <p class="import__status" id="status" role="status"></p>
+  </section>
+</Layout>
+
+<style>
+  .import {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: var(--spacing-lg) var(--spacing-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+  .import h1 {
+    color: var(--color-primary-dark);
+    margin: 0;
+  }
+  .import__intro {
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+  .import__step {
+    padding: var(--spacing-md);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+  .import__step h2 {
+    margin: 0 0 0.25rem;
+    color: var(--color-primary-dark);
+  }
+  .import__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.9rem;
+    color: var(--color-text);
+  }
+  .import__field input[type='radio'] {
+    display: inline;
+    margin-right: 0.35rem;
+  }
+  .import__new-event {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    padding-left: var(--spacing-md);
+    border-left: 2px solid var(--color-border);
+  }
+  input,
+  select,
+  textarea {
+    padding: 0.5rem 0.6rem;
+    border: 1px solid var(--color-border);
+    border-radius: calc(var(--radius) / 2);
+    font: inherit;
+  }
+  button {
+    align-self: flex-start;
+    padding: 0.6rem 1.5rem;
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.1s ease, opacity 0.1s ease;
+  }
+  button:active:not(:disabled) {
+    transform: scale(0.96);
+  }
+  button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  button[data-loading='true'] {
+    opacity: 0.7;
+    cursor: wait;
+  }
+  .import__status {
+    min-height: 1.2em;
+    color: var(--color-text-muted);
+  }
+  .import__status[data-state='error'] {
+    color: #b3261e;
+  }
+  .import__hint {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+  }
+  .import__dropzone {
+    padding: var(--spacing-md);
+    border: 2px dashed var(--color-border);
+    border-radius: var(--radius);
+    text-align: center;
+    color: var(--color-text-muted);
+    cursor: pointer;
+  }
+  .import__dropzone[data-active='true'] {
+    border-color: var(--color-primary);
+    color: var(--color-text);
+  }
+  .import__photo-tray {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    min-height: 3.5rem;
+  }
+  /* Las miniaturas se crean con document.createElement en runtime, así que no reciben
+     el atributo de scope de Astro — deben quedar como regla global (mismo patrón que
+     PhotoGallery.astro para sus dots). */
+  :global(.import__thumb) {
+    width: 56px;
+    height: 56px;
+    object-fit: cover;
+    border-radius: calc(var(--radius) / 2);
+    border: 1px solid var(--color-border);
+  }
+</style>
+
+<script>
+  import type { ParseResult, RestaurantDoc } from '../../lib/admin/parseRestaurantsExcel';
+
+  const eventModeRadios = document.querySelectorAll<HTMLInputElement>('input[name="eventMode"]');
+  const eventSelect = document.getElementById('event-select') as HTMLSelectElement;
+  const newEventFields = document.getElementById('new-event-fields') as HTMLElement;
+  const status = document.getElementById('status') as HTMLElement;
+
+  eventModeRadios.forEach((radio) => {
+    radio.addEventListener('change', () => {
+      const isNew = (document.querySelector('input[name="eventMode"]:checked') as HTMLInputElement)?.value === 'new';
+      newEventFields.hidden = !isNew;
+      eventSelect.disabled = isNew;
+    });
+  });
+
+  function setStatus(message: string, isError = false) {
+    status.textContent = message;
+    status.dataset.state = isError ? 'error' : '';
+  }
+
+  // Deshabilita el botón y le cambia el texto mientras dura la promesa, para que quede claro
+  // que está laburando (si no, con el fetch tardando unos segundos parece que no pasó nada).
+  async function withLoading<T>(button: HTMLButtonElement, loadingText: string, task: () => Promise<T>): Promise<T> {
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.dataset.loading = 'true';
+    button.textContent = loadingText;
+    try {
+      return await task();
+    } finally {
+      button.disabled = false;
+      button.dataset.loading = 'false';
+      button.textContent = originalText;
+    }
+  }
+
+  async function resolveEventId(): Promise<string | null> {
+    const isNew = (document.querySelector('input[name="eventMode"]:checked') as HTMLInputElement)?.value === 'new';
+    if (!isNew) {
+      const id = eventSelect.value;
+      if (!id) {
+        setStatus('Elegí un evento existente o creá uno nuevo.', true);
+        return null;
+      }
+      return id;
+    }
+
+    const name = (document.getElementById('event-name') as HTMLInputElement).value.trim();
+    const startDate = (document.getElementById('event-start') as HTMLInputElement).value;
+    const endDate = (document.getElementById('event-end') as HTMLInputElement).value;
+    const whatIncludes = (document.getElementById('event-includes') as HTMLTextAreaElement).value.trim();
+
+    if (!name || !startDate || !endDate || !whatIncludes) {
+      setStatus('Completá todos los campos del evento nuevo.', true);
+      return null;
+    }
+
+    const response = await fetch('/api/admin/event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, startDate, endDate, whatIncludes }),
+    });
+    const body = await response.json();
+    if (!response.ok) {
+      setStatus(body.error ?? 'No se pudo crear el evento.', true);
+      return null;
+    }
+    return body.id as string;
+  }
+
+  let previewDocuments: RestaurantDoc[] = [];
+
+  document.getElementById('btn-preview')?.addEventListener('click', async (event) => {
+    const button = event.currentTarget as HTMLButtonElement;
+    const fileInput = document.getElementById('excel-file') as HTMLInputElement;
+    const file = fileInput.files?.[0];
+    if (!file) {
+      setStatus('Elegí el archivo Excel primero.', true);
+      return;
+    }
+
+    await withLoading(button, 'Leyendo...', async () => {
+      setStatus('Resolviendo evento...');
+      const eventId = await resolveEventId();
+      if (!eventId) return;
+
+      setStatus('Leyendo el Excel...');
+      const formData = new FormData();
+      formData.set('excel', file);
+      formData.set('eventId', eventId);
+
+      const response = await fetch('/api/admin/restaurants/preview', { method: 'POST', body: formData });
+      const body = (await response.json()) as ParseResult & { error?: string };
+      if (!response.ok) {
+        setStatus(body.error ?? 'No se pudo leer el Excel.', true);
+        return;
+      }
+
+      previewDocuments = body.documents;
+      const { report } = body;
+
+      const previewSection = document.getElementById('preview-section') as HTMLElement;
+      previewSection.hidden = false;
+      (document.getElementById('preview-summary') as HTMLElement).textContent =
+        `${report.created.length} restaurantes listos para importar. ${report.skipped.length} omitidos. ${Object.keys(report.warnings).length} con advertencias no bloqueantes.`;
+
+      const skippedList = document.getElementById('preview-skipped-list') as HTMLElement;
+      skippedList.innerHTML = report.skipped.map((s) => `<li>${s.name} — ${s.reason}</li>`).join('');
+
+      const warningsList = document.getElementById('preview-warnings-list') as HTMLElement;
+      warningsList.innerHTML = Object.entries(report.warnings)
+        .map(([name, issues]) => `<li>${name} — ${issues.join(', ')}</li>`)
+        .join('');
+
+      setStatus('Vista previa lista. Revisá y confirmá.');
+    });
+  });
+
+  document.getElementById('btn-confirm')?.addEventListener('click', async (event) => {
+    const button = event.currentTarget as HTMLButtonElement;
+    if (previewDocuments.length === 0) {
+      setStatus('No hay nada para importar todavía.', true);
+      return;
+    }
+
+    await withLoading(button, 'Importando...', async () => {
+      setStatus(`Importando ${previewDocuments.length} restaurantes...`);
+      const response = await fetch('/api/admin/restaurants/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ documents: previewDocuments }),
+      });
+      const body = await response.json();
+      if (!response.ok) {
+        setStatus(body.error ?? 'No se pudo importar.', true);
+        return;
+      }
+
+      const resultSection = document.getElementById('result-section') as HTMLElement;
+      resultSection.hidden = false;
+      const failedText = body.failed.length > 0 ? ` ${body.failed.length} fallaron: ${body.failed.map((f: { name: string }) => f.name).join(', ')}.` : '';
+      (document.getElementById('result-summary') as HTMLElement).textContent =
+        `${body.importedCount} restaurantes importados.${failedText}`;
+      setStatus('Importación terminada.');
+
+      photoRestaurants = previewDocuments.map(({ _id, name }) => ({ _id, name }));
+      uploadedRestaurantIds.clear();
+      showPhotosStep();
+    });
+  });
+
+  // --- Paso 4: fotos, un restaurante a la vez ---
+
+  interface PhotoRestaurant {
+    _id: string;
+    name: string;
+  }
+
+  let photoRestaurants: PhotoRestaurant[] = [];
+  const uploadedRestaurantIds = new Set<string>();
+  let stagedFiles: File[] = [];
+  let photosStepWired = false;
+
+  function restaurantSelect(): HTMLSelectElement {
+    return document.getElementById('photo-restaurant-select') as HTMLSelectElement;
+  }
+
+  function renderRestaurantOptions() {
+    const select = restaurantSelect();
+    const previousValue = select.value;
+    select.innerHTML = photoRestaurants
+      .map((doc) => `<option value="${doc._id}">${uploadedRestaurantIds.has(doc._id) ? '✓ ' : ''}${doc.name}</option>`)
+      .join('');
+    if (previousValue) select.value = previousValue;
+    (document.getElementById('photos-progress') as HTMLElement).textContent =
+      ` (${uploadedRestaurantIds.size} de ${photoRestaurants.length} con fotos)`;
+  }
+
+  const MAX_DIMENSION = 2000; // px, lado más largo
+  const JPEG_QUALITY = 0.82;
+  const SKIP_COMPRESSION_UNDER = 400 * 1024; // no vale la pena recomprimir algo ya chico
+
+  // Fotos de cámara sin comprimir (15-20MB, 4000x6000px) tardan minutos en subir y no aportan
+  // nada — Sanity las va a servir redimensionadas igual. Se re-codifican acá, en el navegador,
+  // antes de mandarlas, así lo que viaja por la red ya es liviano.
+  async function compressImage(file: File): Promise<File> {
+    if (!file.type.startsWith('image/') || file.size < SKIP_COMPRESSION_UNDER) return file;
+
+    try {
+      const bitmap = await createImageBitmap(file);
+      const scale = Math.min(1, MAX_DIMENSION / Math.max(bitmap.width, bitmap.height));
+      const width = Math.round(bitmap.width * scale);
+      const height = Math.round(bitmap.height * scale);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return file;
+      ctx.drawImage(bitmap, 0, 0, width, height);
+      bitmap.close();
+
+      const blob: Blob | null = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', JPEG_QUALITY));
+      if (!blob || blob.size >= file.size) return file;
+
+      const newName = file.name.replace(/\.[^.]+$/, '') + '.jpg';
+      return new File([blob], newName, { type: 'image/jpeg' });
+    } catch {
+      return file; // si el navegador no puede decodificarla (ej. HEIC), se sube tal cual
+    }
+  }
+
+  async function compressFiles(files: File[]): Promise<File[]> {
+    const compressed: File[] = [];
+    for (const file of files) compressed.push(await compressImage(file));
+    return compressed;
+  }
+
+  function renderStagedPreview() {
+    const preview = document.getElementById('photos-preview') as HTMLElement;
+    preview.innerHTML = '';
+    for (const file of stagedFiles) {
+      const img = document.createElement('img');
+      img.className = 'import__thumb';
+      img.src = URL.createObjectURL(file);
+      img.title = file.name;
+      preview.appendChild(img);
+    }
+  }
+
+  // Se puede llegar acá desde dos lugares (recién importado, o retomando un evento existente
+  // después de un refresh) — los listeners de los inputs se cablean una sola vez.
+  function showPhotosStep() {
+    const photosSection = document.getElementById('photos-section') as HTMLElement;
+    photosSection.hidden = false;
+    renderRestaurantOptions();
+    stagedFiles = [];
+    renderStagedPreview();
+
+    if (photosStepWired) return;
+    photosStepWired = true;
+
+    restaurantSelect().addEventListener('change', () => {
+      stagedFiles = [];
+      renderStagedPreview();
+    });
+
+    const dropzone = document.getElementById('photos-dropzone') as HTMLElement;
+    const photosInput = document.getElementById('photos-input') as HTMLInputElement;
+
+    async function addFiles(files: File[]) {
+      const originalSize = files.reduce((sum, f) => sum + f.size, 0);
+      setStatus(`Comprimiendo ${files.length} foto(s)...`);
+      stagedFiles = await compressFiles(files);
+      renderStagedPreview();
+      const finalSize = stagedFiles.reduce((sum, f) => sum + f.size, 0);
+      const mb = (bytes: number) => (bytes / (1024 * 1024)).toFixed(1);
+      setStatus(`${files.length} foto(s) listas (${mb(originalSize)}MB → ${mb(finalSize)}MB). Revisá y confirmá.`);
+    }
+
+    dropzone.addEventListener('click', () => photosInput.click());
+    photosInput.addEventListener('change', () => {
+      if (photosInput.files) addFiles([...photosInput.files]);
+      photosInput.value = '';
+    });
+    dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.dataset.active = 'true';
+    });
+    dropzone.addEventListener('dragleave', () => {
+      dropzone.dataset.active = 'false';
+    });
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.dataset.active = 'false';
+      if (e.dataTransfer?.files) addFiles([...e.dataTransfer.files]);
+    });
+  }
+
+  document.getElementById('btn-load-existing-photos')?.addEventListener('click', async (event) => {
+    const button = event.currentTarget as HTMLButtonElement;
+    const eventId = eventSelect.value;
+    if (!eventId) {
+      setStatus('Elegí un evento existente primero (no "Crear un evento nuevo").', true);
+      return;
+    }
+
+    await withLoading(button, 'Cargando...', async () => {
+      const response = await fetch(`/api/admin/restaurants/list?eventId=${encodeURIComponent(eventId)}`);
+      const body = await response.json();
+      if (!response.ok) {
+        setStatus(body.error ?? 'No se pudieron cargar los restaurantes de este evento.', true);
+        return;
+      }
+
+      const restaurants = body.restaurants as { _id: string; name: string; hasGallery: boolean }[];
+      if (restaurants.length === 0) {
+        setStatus('Este evento todavía no tiene restaurantes cargados — subí primero el Excel.', true);
+        return;
+      }
+
+      photoRestaurants = restaurants.map(({ _id, name }) => ({ _id, name }));
+      uploadedRestaurantIds.clear();
+      restaurants.filter((r) => r.hasGallery).forEach((r) => uploadedRestaurantIds.add(r._id));
+
+      showPhotosStep();
+      setStatus(`${restaurants.length} restaurantes cargados. Elegí uno para subirle fotos.`);
+    });
+  });
+
+  document.getElementById('btn-upload-photos')?.addEventListener('click', async (event) => {
+    const button = event.currentTarget as HTMLButtonElement;
+    const restaurantId = restaurantSelect().value;
+    if (!restaurantId) {
+      setStatus('Elegí un restaurante primero.', true);
+      return;
+    }
+    if (stagedFiles.length === 0) {
+      setStatus('Elegí las fotos de este restaurante primero.', true);
+      return;
+    }
+
+    await withLoading(button, 'Subiendo...', async () => {
+      setStatus(`Subiendo ${stagedFiles.length} foto(s)...`);
+      const formData = new FormData();
+      for (const file of stagedFiles) formData.append(`photo::${restaurantId}`, file);
+
+      const response = await fetch('/api/admin/restaurants/photos', { method: 'POST', body: formData });
+      const body = await response.json();
+      if (!response.ok) {
+        setStatus(body.error ?? 'No se pudieron subir las fotos.', true);
+        return;
+      }
+      const failed = body.results.find((r: { restaurantId: string; error?: string }) => r.restaurantId === restaurantId && r.error);
+      if (failed) {
+        setStatus(`Falló: ${failed.error}`, true);
+        return;
+      }
+
+      uploadedRestaurantIds.add(restaurantId);
+      stagedFiles = [];
+      renderStagedPreview();
+      renderRestaurantOptions();
+      setStatus('Fotos subidas. Elegí el siguiente restaurante.');
+    });
+  });
+</script>
