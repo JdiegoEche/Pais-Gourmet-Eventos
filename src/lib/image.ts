@@ -18,3 +18,10 @@ export function thumb(url: string, width: number): string {
     return url;
   }
 }
+
+// Arma un srcset con una variante por ancho (todas via thumb(), mismo CDN de Sanity resize).
+// Para URLs que no son de Sanity, thumb() ya devuelve la url sin cambios para cada ancho, así
+// que el srcset resultante repite la misma URL — inofensivo, el navegador igual usa "src".
+export function thumbSrcSet(url: string, widths: number[]): string {
+  return widths.map((width) => `${thumb(url, width)} ${width}w`).join(', ');
+}

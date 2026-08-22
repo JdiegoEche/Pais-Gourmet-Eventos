@@ -1,5 +1,5 @@
 ---
-import { thumb } from '../lib/image';
+import { thumb, thumbSrcSet } from '../lib/image';
 
 interface Props {
   imageUrl: string;
@@ -11,7 +11,13 @@ const { imageUrl } = Astro.props;
 {imageUrl && (
   <section class="what-includes">
     <h2>¿Qué incluye?</h2>
-    <img src={thumb(imageUrl, 900)} alt="Qué incluye el menú" loading="lazy" />
+    <img
+      src={thumb(imageUrl, 900)}
+      srcset={thumbSrcSet(imageUrl, [600, 900])}
+      sizes="(max-width: 900px) 100vw, 900px"
+      alt="Qué incluye el menú"
+      loading="lazy"
+    />
   </section>
 )}
 

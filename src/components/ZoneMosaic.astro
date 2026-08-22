@@ -1,6 +1,6 @@
 ---
 import type { ZoneShowcaseItem } from '../types';
-import { thumb } from '../lib/image';
+import { thumb, thumbSrcSet } from '../lib/image';
 
 interface Props {
   zones: ZoneShowcaseItem[];
@@ -15,7 +15,13 @@ const { zones } = Astro.props;
     <div class="zone-mosaic__grid">
       {zones.map((zone) => (
         <a class="zone-mosaic__tile" href={`/restaurantes-participantes?zone=${encodeURIComponent(zone.name)}`}>
-          <img src={thumb(zone.imageUrl, 500)} alt={zone.name} loading="lazy" />
+          <img
+            src={thumb(zone.imageUrl, 500)}
+            srcset={thumbSrcSet(zone.imageUrl, [300, 500])}
+            sizes="(max-width: 600px) 45vw, 300px"
+            alt={zone.name}
+            loading="lazy"
+          />
           <span>{zone.name}</span>
         </a>
       ))}

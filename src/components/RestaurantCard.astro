@@ -1,6 +1,6 @@
 ---
 import type { Restaurant } from '../types';
-import { thumb, PLACEHOLDER_IMAGE } from '../lib/image';
+import { thumb, thumbSrcSet, PLACEHOLDER_IMAGE } from '../lib/image';
 
 interface Props {
   restaurant: Restaurant;
@@ -12,6 +12,10 @@ const activeFeatures = Object.entries(restaurant.features)
   .filter(([key, value]) => key !== 'paymentMethods' && value === true)
   .map(([key]) => key);
 const galleryUrls = restaurant.gallery.length > 0 ? restaurant.gallery.map((url) => thumb(url, 480)) : [PLACEHOLDER_IMAGE];
+// srcset solo para la primera foto (la que carga de entrada): el carrusel de miniaturas
+// cambia el "src" con JS al navegar, sin recalcular srcset — no vale la pena la complejidad
+// para fotos que el usuario recién pidió ver.
+const firstPhotoSrcSet = restaurant.gallery.length > 0 ? thumbSrcSet(restaurant.gallery[0], [240, 360, 480]) : undefined;
 ---
 
 <a
@@ -28,7 +32,17 @@ const galleryUrls = restaurant.gallery.length > 0 ? restaurant.gallery.map((url)
   data-review-count={restaurant.reviewCount}
 >
   <div class="restaurant-card__image" data-carousel data-gallery={galleryUrls.join('|')}>
-    <img src={galleryUrls[0]} alt={restaurant.name} loading="lazy" decoding="async" width="480" height="480" data-carousel-img />
+    <img
+      src={galleryUrls[0]}
+      srcset={firstPhotoSrcSet}
+      sizes="(max-width: 600px) 50vw, (max-width: 1100px) 33vw, 25vw"
+      alt={restaurant.name}
+      loading="lazy"
+      decoding="async"
+      width="480"
+      height="480"
+      data-carousel-img
+    />
     {galleryUrls.length > 1 && (
       <>
         <button type="button" class="restaurant-card__nav restaurant-card__nav--prev" data-carousel-prev aria-label="Foto anterior">

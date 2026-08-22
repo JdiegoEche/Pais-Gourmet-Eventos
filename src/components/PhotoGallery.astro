@@ -1,5 +1,5 @@
 ---
-import { thumb } from '../lib/image';
+import { thumb, thumbSrcSet } from '../lib/image';
 
 interface Props {
   photos: string[];
@@ -22,7 +22,14 @@ const { photos, alt } = Astro.props;
           data-alt={`${alt} — foto ${index + 1}`}
           aria-label={`Ver foto ${index + 1} de ${alt} en pantalla completa`}
         >
-          <img src={thumb(src, 1000)} alt={`${alt} — foto ${index + 1}`} loading={index === 0 ? 'eager' : 'lazy'} decoding="async" />
+          <img
+            src={thumb(src, 1000)}
+            srcset={thumbSrcSet(src, [480, 800, 1200])}
+            sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 92vw"
+            alt={`${alt} — foto ${index + 1}`}
+            loading={index === 0 ? 'eager' : 'lazy'}
+            decoding="async"
+          />
         </button>
       ))}
     </div>

@@ -1,6 +1,6 @@
 ---
 import type { PriceRangeItem } from '../types';
-import { thumb } from '../lib/image';
+import { thumb, thumbSrcSet } from '../lib/image';
 
 interface Props {
   priceRanges: PriceRangeItem[];
@@ -15,7 +15,13 @@ const { priceRanges } = Astro.props;
     <div class="price-mosaic__grid">
       {priceRanges.map((item) => (
         <a class="price-mosaic__tile" href="/restaurantes-participantes">
-          <img src={thumb(item.imageUrl, 500)} alt={item.range} loading="lazy" />
+          <img
+            src={thumb(item.imageUrl, 500)}
+            srcset={thumbSrcSet(item.imageUrl, [280, 500])}
+            sizes="(max-width: 600px) 45vw, 280px"
+            alt={item.range}
+            loading="lazy"
+          />
           <span>{item.range}</span>
         </a>
       ))}
