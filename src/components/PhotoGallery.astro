@@ -144,13 +144,24 @@ const { photos, alt } = Astro.props;
     max-height: 90vh;
     background: transparent;
   }
+  /* "display" solo se fija cuando está abierto: si se pisa el "display: none" nativo del
+     <dialog> cerrado (dialog:not([open])), queda renderizado en el flujo normal de la
+     página aunque esté cerrado. */
+  .photo-gallery__dialog[open] {
+    display: flex;
+  }
   .photo-gallery__dialog::backdrop {
     background: rgba(20, 14, 8, 0.75);
   }
   .photo-gallery__dialog img {
     display: block;
-    width: 100%;
-    height: 100%;
+    /* Ancho/alto en "auto" + estos topes (en vez de 100%/100% del dialog, que no tiene un
+       tamaño propio) es lo que deja que la imagen se achique proporcionalmente en vez de
+       mostrarse a su resolución nativa y forzar scroll. */
+    width: auto;
+    height: auto;
+    max-width: min(90vw, 900px);
+    max-height: 90vh;
     object-fit: contain;
   }
   .photo-gallery__close {
@@ -237,12 +248,20 @@ const { photos, alt } = Astro.props;
   strip?.querySelectorAll('img').forEach((img) => img.addEventListener('load', buildDots));
   buildDots();
 
+  function scrollToNextSegment() {
+    if (!strip) return;
+    const maxScrollLeft = strip.scrollWidth - strip.clientWidth;
+    // -1 por redondeo de subpíxel: en algunos navegadores scrollLeft nunca llega exacto al máximo.
+    const atEnd = strip.scrollLeft >= maxScrollLeft - 1;
+    strip.scrollTo({ left: atEnd ? 0 : strip.scrollLeft + strip.clientWidth, behavior: scrollBehavior });
+  }
+
   stripPrev?.addEventListener('click', () => strip?.scrollBy({ left: -(strip.clientWidth), behavior: scrollBehavior }));
-  stripNext?.addEventListener('click', () => strip?.scrollBy({ left: strip.clientWidth, behavior: scrollBehavior }));
+  stripNext?.addEventListener('click', scrollToNextSegment);
 
   gallery?.addEventListener('keydown', (event) => {
     if (event.key === 'ArrowLeft') strip?.scrollBy({ left: -(strip.clientWidth), behavior: scrollBehavior });
-    if (event.key === 'ArrowRight') strip?.scrollBy({ left: strip.clientWidth, behavior: scrollBehavior });
+    if (event.key === 'ArrowRight') scrollToNextSegment();
   });
 
   const dialog = document.querySelector<HTMLDialogElement>('[data-photo-dialog]');
