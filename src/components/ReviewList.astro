@@ -239,6 +239,11 @@ function stars(value: number) {
     if (!list || !container) return;
     const heading = container.querySelector('h3');
     if (heading) heading.textContent = `Reseñas (${reviews.length})`;
+    // El contador de la pestaña "Valoraciones (N)" vive en [slug].astro, fuera de este
+    // componente, y se renderiza una sola vez en el servidor — sin esto, queda desactualizado
+    // después de publicar una reseña aunque el contador de acá adentro sí se actualice.
+    const tabTrigger = document.querySelector('[data-tab-trigger="valoraciones"]');
+    if (tabTrigger) tabTrigger.textContent = `Valoraciones (${reviews.length})`;
 
     list.innerHTML = reviews
       .map((review) => {
