@@ -1,10 +1,15 @@
 import type { ReviewRepository, CreateReviewInput, CreateReviewReplyInput } from '../ports';
 import type { Review, ReviewReply } from '../../../types';
-import { sanity, getSanityWriteClient } from '../../sanity';
+import { getSanityWriteClient } from '../../sanity';
 
 export class SanityReviewRepository implements ReviewRepository {
   async getByRestaurant(restaurantSlug: string): Promise<Review[]> {
-    return sanity.fetch<Review[]>(
+    // useCdn: false a propósito (mismo cliente que las escrituras, no el "sanity" cacheado en
+    // CDN): justo después de publicar una reseña, ReviewList.astro vuelve a pedir esta lista
+    // de inmediato — con el cliente de CDN esa lectura llegaba antes de que la escritura se
+    // propagara (hasta ~60s), así que la reseña recién creada no aparecía hasta el próximo
+    // refresh (ej. al publicar una segunda).
+    return getSanityWriteClient().fetch<Review[]>(
       `*[_type == "review" && restaurant->slug.current == $slug] | order(createdAt desc){
         "id": _id,
         "restaurantSlug": restaurant->slug.current,
