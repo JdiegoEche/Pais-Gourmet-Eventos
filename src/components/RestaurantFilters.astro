@@ -256,7 +256,7 @@ const { cuisineTypes, zones, deliveryZones, priceRanges } = Astro.props;
     const priceRange = priceRangeValue ? parsePriceRange(priceRangeValue) : null;
 
     const cardCuisines = card.dataset.cuisine?.split('|') ?? [];
-    const cardZone = card.dataset.zone ?? '';
+    const cardZone = card.dataset.zone ? card.dataset.zone.split('|') : [];
     const cardDeliveryZones = card.dataset.deliveryZones ? card.dataset.deliveryZones.split('|') : [];
     const cardFeatures = card.dataset.features ? card.dataset.features.split('|') : [];
     const cardPrices = card.dataset.prices ? card.dataset.prices.split('|').map(Number) : [];
@@ -264,7 +264,7 @@ const { cuisineTypes, zones, deliveryZones, priceRanges } = Astro.props;
     const cardName = normalize(card.dataset.name ?? '');
 
     const matchesCuisine = !cuisine || cardCuisines.includes(cuisine);
-    const matchesZone = !zone || cardZone === zone;
+    const matchesZone = !zone || cardZone.includes(zone);
     const matchesDeliveryZone = !deliveryZone || cardDeliveryZones.includes(deliveryZone);
     const matchesFeatures = features.every((f) => cardFeatures.includes(f));
     const matchesVegetarian = !vegetarianOnly || cardVegetarian;

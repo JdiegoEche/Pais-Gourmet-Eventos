@@ -1,6 +1,8 @@
-# Schema de Sanity — País Gourmet
+# Sanity Studio — País Gourmet
 
-Esta carpeta contiene las definiciones de schema (`schemaTypes/`) listas para conectar a un Sanity Studio real. Todavía no existe `sanity.config.ts` en el proyecto: falta correr `sanity init`, paso manual pendiente que requiere login del usuario.
+Studio standalone (proyecto `xo45blck`, dataset `production`), con el schema de `schemaTypes/`.
+
+Para correrlo local: `npm install && npm run dev` desde esta carpeta.
 
 ## Documentos
 
@@ -12,19 +14,8 @@ Esta carpeta contiene las definiciones de schema (`schemaTypes/`) listas para co
 
 `menu`, `menuItem`, `menuHighlight`, `features`, `sponsorLogo` — usados como campos embebidos dentro de `event`/`restaurant`.
 
-## Cómo conectarlo cuando se haga `sanity init`
+## Conexión con el frontend
 
-1. Desde la raíz del proyecto: `npm create sanity@latest` (o `npx sanity init` si ya tenés cuenta) — esto genera `sanity.config.ts` y su propia carpeta de schema.
-2. Reemplazar el `schemaTypes` generado por defecto por el de esta carpeta (o copiar los archivos de `sanity/schemaTypes/` a donde el init los haya puesto).
-3. En `sanity.config.ts`, importar y usar:
+El sitio Astro (raíz del repo) lee `SANITY_PROJECT_ID`, `SANITY_DATASET`, `SANITY_WRITE_TOKEN` y `EVENT_SLUG` desde `.env` (ver `src/lib/sanity.ts`). `SANITY_WRITE_TOKEN` y `EVENT_SLUG` hay que completarlos a mano — no se generan con el init.
 
-   ```ts
-   import {schemaTypes} from './sanity/schemaTypes'
-
-   export default defineConfig({
-     // ...
-     schema: {types: schemaTypes},
-   })
-   ```
-
-4. Los tipos en `src/types/index.ts` (consumidos por el frontend vía GROQ) ya están alineados campo a campo con este schema — si se agrega o renombra un campo acá, actualizar también ese archivo.
+Los tipos en `src/types/index.ts` (consumidos por el frontend vía GROQ) ya están alineados campo a campo con este schema — si se agrega o renombra un campo acá, actualizar también ese archivo.

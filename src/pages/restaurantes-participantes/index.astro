@@ -7,7 +7,7 @@ import { getAllRestaurants, getEvent } from '../../lib/data';
 const restaurants = await getAllRestaurants();
 const event = await getEvent();
 const cuisineTypes = [...new Set(restaurants.flatMap((r) => r.cuisineTypes))];
-const zones = [...new Set(restaurants.map((r) => r.zone))];
+const zones = [...new Set(restaurants.flatMap((r) => r.zone))];
 const deliveryZones = [...new Set(restaurants.flatMap((r) => r.deliveryZones))];
 const priceRanges = event?.priceRanges.map((p) => p.range) ?? [];
 ---

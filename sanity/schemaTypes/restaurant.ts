@@ -38,13 +38,15 @@ export default defineType({
       type: 'array',
       of: [{type: 'string'}],
       options: {layout: 'tags'},
-      validation: (Rule) => Rule.required().min(1),
     }),
     defineField({
       name: 'zone',
-      title: 'Zona',
-      type: 'string',
-      validation: (Rule) => Rule.required(),
+      title: 'Zonas',
+      description: 'Zonas donde el restaurante atiende en mesa. Puede ser más de una si tiene varias sedes.',
+      type: 'array',
+      of: [{type: 'string'}],
+      options: {layout: 'tags'},
+      validation: (Rule) => Rule.required().min(1),
     }),
     defineField({
       name: 'deliveryZones',
@@ -64,7 +66,6 @@ export default defineType({
       name: 'phone',
       title: 'Teléfono',
       type: 'string',
-      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'whatsapp',
@@ -127,5 +128,8 @@ export default defineType({
   ],
   preview: {
     select: {title: 'name', subtitle: 'zone', media: 'gallery.0'},
+    prepare({title, subtitle, media}) {
+      return {title, subtitle: Array.isArray(subtitle) ? subtitle.join(', ') : subtitle, media}
+    },
   },
 })

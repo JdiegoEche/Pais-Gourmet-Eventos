@@ -1,6 +1,6 @@
 ---
 import type { Restaurant } from '../types';
-import { thumb } from '../lib/image';
+import { thumb, PLACEHOLDER_IMAGE } from '../lib/image';
 
 interface Props {
   restaurants: Restaurant[];
@@ -39,7 +39,7 @@ function rowDuration(items: Restaurant[]): number {
                   aria-hidden={isDuplicate ? 'true' : undefined}
                   tabindex={isDuplicate ? -1 : undefined}
                 >
-                  <img src={thumb(restaurant.logo ?? restaurant.gallery[0], 160)} alt="" loading="lazy" />
+                  <img src={thumb(restaurant.logo ?? restaurant.gallery[0] ?? PLACEHOLDER_IMAGE, 160)} alt="" loading="lazy" />
                 </a>
               );
             })}

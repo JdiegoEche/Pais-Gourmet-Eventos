@@ -1,6 +1,6 @@
 ---
 import type { Restaurant } from '../types';
-import { thumb } from '../lib/image';
+import { thumb, PLACEHOLDER_IMAGE } from '../lib/image';
 
 interface Props {
   restaurant: Restaurant;
@@ -11,7 +11,7 @@ const cheapestMenu = [...restaurant.menus].sort((a, b) => a.currentPrice - b.cur
 const activeFeatures = Object.entries(restaurant.features)
   .filter(([key, value]) => key !== 'paymentMethods' && value === true)
   .map(([key]) => key);
-const galleryUrls = restaurant.gallery.map((url) => thumb(url, 480));
+const galleryUrls = restaurant.gallery.length > 0 ? restaurant.gallery.map((url) => thumb(url, 480)) : [PLACEHOLDER_IMAGE];
 ---
 
 <a
@@ -19,7 +19,7 @@ const galleryUrls = restaurant.gallery.map((url) => thumb(url, 480));
   href={`/restaurante/${restaurant.slug}`}
   data-restaurant-card
   data-cuisine={restaurant.cuisineTypes.join('|')}
-  data-zone={restaurant.zone}
+  data-zone={restaurant.zone.join('|')}
   data-delivery-zones={restaurant.deliveryZones.join('|')}
   data-prices={restaurant.menus.map((menu) => menu.currentPrice).join('|')}
   data-vegetarian={restaurant.vegetarianOption}
@@ -45,7 +45,7 @@ const galleryUrls = restaurant.gallery.map((url) => thumb(url, 480));
   </div>
   <div class="restaurant-card__body">
     <h3>{restaurant.name}</h3>
-    <p class="restaurant-card__meta">{restaurant.cuisineTypes.join(', ')} · {restaurant.zone}</p>
+    <p class="restaurant-card__meta">{[restaurant.cuisineTypes.join(', '), restaurant.zone.join(', ')].filter(Boolean).join(' · ')}</p>
     {cheapestMenu && <p class="restaurant-card__price">Desde ${cheapestMenu.currentPrice.toLocaleString('es-CO')}</p>}
   </div>
 </a>

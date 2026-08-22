@@ -59,10 +59,10 @@ export interface Restaurant {
   name: string;
   logo?: string;
   cuisineTypes: string[];
-  zone: string;
+  zone: string[];
   deliveryZones: string[];
   address: string;
-  phone: string;
+  phone?: string;
   whatsapp?: string;
   instagram?: string;
   // Texto libre tal cual lo escribe cada restaurante (ej. "Lunes a viernes de 3:30pm a 10pm").

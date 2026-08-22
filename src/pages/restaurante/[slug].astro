@@ -6,6 +6,7 @@ import ReviewList from '../../components/ReviewList.astro';
 import ShareButtons from '../../components/ShareButtons.astro';
 import WeeklyRecommended from '../../components/WeeklyRecommended.astro';
 import { getAllRestaurants, getReviews, getWeeklyRecommendedRestaurants } from '../../lib/data';
+import { PLACEHOLDER_IMAGE } from '../../lib/image';
 import type { Restaurant } from '../../types';
 
 export async function getStaticPaths() {
@@ -50,12 +51,12 @@ const videoEmbedUrl = youtubeEmbedUrl(restaurant.youtubeVideoUrl);
 ---
 
 <Layout title={restaurant.name}>
-  <PhotoGallery photos={restaurant.gallery} alt={restaurant.name} />
+  <PhotoGallery photos={restaurant.gallery.length > 0 ? restaurant.gallery : [PLACEHOLDER_IMAGE]} alt={restaurant.name} />
 
   <article class="restaurant-detail">
     <header class="restaurant-detail__header">
       <h1>{restaurant.name}</h1>
-      <p class="restaurant-detail__meta">{restaurant.cuisineTypes.join(', ')} · {restaurant.zone}</p>
+      <p class="restaurant-detail__meta">{[restaurant.cuisineTypes.join(', '), restaurant.zone.join(', ')].filter(Boolean).join(' · ')}</p>
     </header>
 
     <div class="restaurant-detail__tabs" role="tablist" aria-label="Secciones del restaurante">
@@ -151,7 +152,7 @@ const videoEmbedUrl = youtubeEmbedUrl(restaurant.youtubeVideoUrl);
             </h2>
             <p class="info-card__label">Dirección</p>
             <p>{restaurant.address}</p>
-            <p><a href={`tel:${restaurant.phone}`}>{restaurant.phone}</a></p>
+            {restaurant.phone && <p><a href={`tel:${restaurant.phone}`}>{restaurant.phone}</a></p>}
 
             <p class="info-card__label">Horario de atención</p>
             <p class="restaurant-detail__hours">{restaurant.hours}</p>
