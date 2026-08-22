@@ -13,17 +13,20 @@ export async function getStaticPaths() {
   const restaurants = await getAllRestaurants();
   return restaurants.map((restaurant) => ({
     params: { slug: restaurant.slug },
-    props: { restaurant },
+    // "allRestaurants" reusa la misma referencia en las 167 páginas (no la duplica): se la
+    // pasamos a getWeeklyRecommendedRestaurants para no volver a pedirla por cada una.
+    props: { restaurant, allRestaurants: restaurants },
   }));
 }
 
 interface Props {
   restaurant: Restaurant;
+  allRestaurants: Restaurant[];
 }
 
-const { restaurant } = Astro.props;
+const { restaurant, allRestaurants } = Astro.props;
 const reviews = await getReviews(restaurant.slug);
-const weeklyRecommended = await getWeeklyRecommendedRestaurants(restaurant.slug);
+const weeklyRecommended = await getWeeklyRecommendedRestaurants(allRestaurants, restaurant.slug);
 
 const menuCategories = ['entrantes', 'fuerte', 'postre'] as const;
 

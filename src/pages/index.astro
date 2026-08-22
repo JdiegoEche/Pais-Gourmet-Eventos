@@ -13,9 +13,9 @@ import SponsorsSection from '../components/SponsorsSection.astro';
 import { getEvent, getFeaturedRestaurants, getAllRestaurants, getHeroRecommendedRestaurants } from '../lib/data';
 
 const event = await getEvent();
-const featuredRestaurants = await getFeaturedRestaurants();
+const featuredRestaurants = await getFeaturedRestaurants(event);
 const allRestaurants = await getAllRestaurants();
-const heroRecommended = await getHeroRecommendedRestaurants();
+const heroRecommended = await getHeroRecommendedRestaurants(event);
 ---
 
 <Layout title={event?.name ?? 'País Gourmet'}>

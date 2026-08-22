@@ -54,13 +54,13 @@ export async function getEvent(): Promise<EventData | null> {
   return (await eventRepository()).getEvent();
 }
 
-export async function getFeaturedRestaurants(): Promise<Restaurant[]> {
-  const event = await getEvent();
+// Reciben el event ya resuelto en vez de volver a pedirlo: el home (único caller) ya lo tiene
+// del getEvent() de su propio frontmatter — sin esto, cada una repetía el mismo fetch.
+export async function getFeaturedRestaurants(event: EventData | null): Promise<Restaurant[]> {
   return (await restaurantRepository()).getFeatured(event?.featuredRestaurantSlugs ?? []);
 }
 
-export async function getHeroRecommendedRestaurants(): Promise<Restaurant[]> {
-  const event = await getEvent();
+export async function getHeroRecommendedRestaurants(event: EventData | null): Promise<Restaurant[]> {
   if (!event?.heroRecommendedEnabled) return [];
   return (await restaurantRepository()).getFeatured(event.heroRecommendedRestaurantSlugs ?? []);
 }
@@ -73,11 +73,16 @@ export async function getRestaurantBySlug(slug: string): Promise<Restaurant | nu
   return (await restaurantRepository()).getBySlug(slug);
 }
 
-export async function getWeeklyRecommendedRestaurants(excludeSlug: string): Promise<Restaurant[]> {
+// Recibe la lista de restaurantes en vez de volver a pedirla: quien llama (la página de
+// restaurante) ya la tiene completa de getStaticPaths() — sin esto, cada una de las ~167
+// páginas repetía un fetch completo de los 167 restaurantes solo para elegir 4 al azar.
+export async function getWeeklyRecommendedRestaurants(
+  allRestaurants: Restaurant[],
+  excludeSlug: string
+): Promise<Restaurant[]> {
   const event = await getEvent();
   if (!event?.weeklyRecommendedEnabled) return [];
-  const all = await (await restaurantRepository()).getAll();
-  const candidates = all.filter((restaurant) => restaurant.slug !== excludeSlug);
+  const candidates = allRestaurants.filter((restaurant) => restaurant.slug !== excludeSlug);
   return shuffle(candidates).slice(0, MAX_WEEKLY_RECOMMENDED);
 }
 
