@@ -21,16 +21,25 @@ const events = await sanity.fetch<EventOption[]>(
       <h1>Carga masiva de restaurantes</h1>
       <button type="button" id="btn-logout" class="import__logout">Cerrar sesión</button>
     </div>
-    <p class="import__intro">Subí el Excel del formulario de inscripción. Primero se muestra una vista previa — nada se guarda hasta que confirmes.</p>
+    <p class="import__intro">Sube el Excel del formulario de inscripción. Primero se muestra una vista previa — nada se guarda hasta que confirmes.</p>
 
     <div class="import__step">
-      <h2>1. Evento</h2>
-      <label class="import__field">
-        <input type="radio" name="eventMode" value="existing" checked />
-        Usar un evento existente
-      </label>
+      <div class="import__step-heading">
+        <span class="import__step-badge">1</span>
+        <h2>Evento</h2>
+      </div>
+      <div class="import__mode-options" role="radiogroup" aria-label="Modo de evento">
+        <label class="import__mode-option">
+          <input type="radio" name="eventMode" value="existing" checked />
+          <span>Usar un evento existente</span>
+        </label>
+        <label class="import__mode-option">
+          <input type="radio" name="eventMode" value="new" />
+          <span>Crear un evento nuevo</span>
+        </label>
+      </div>
       <select id="event-select" disabled={events.length === 0}>
-        <option value="">— Elegí un evento —</option>
+        <option value="">— Elege un evento —</option>
         {events.map((event) => <option value={event._id}>{event.name} ({event.slug})</option>)}
       </select>
       <p class="import__hint">
@@ -39,10 +48,6 @@ const events = await sanity.fetch<EventOption[]>(
       </p>
       <button type="button" id="btn-load-existing-photos">Cargar restaurantes de este evento para subir fotos</button>
 
-      <label class="import__field">
-        <input type="radio" name="eventMode" value="new" />
-        Crear un evento nuevo
-      </label>
       <div id="new-event-fields" class="import__new-event" hidden>
         <label class="import__field">
           Nombre del evento
@@ -64,7 +69,10 @@ const events = await sanity.fetch<EventOption[]>(
     </div>
 
     <div class="import__step">
-      <h2>2. Excel</h2>
+      <div class="import__step-heading">
+        <span class="import__step-badge">2</span>
+        <h2>Excel</h2>
+      </div>
       <label class="import__field">
         Archivo del formulario (.xlsx)
         <input type="file" id="excel-file" accept=".xlsx" />
@@ -73,7 +81,10 @@ const events = await sanity.fetch<EventOption[]>(
     </div>
 
     <div class="import__step" id="preview-section" hidden>
-      <h2>3. Revisión</h2>
+      <div class="import__step-heading">
+        <span class="import__step-badge">3</span>
+        <h2>Revisión</h2>
+      </div>
       <p id="preview-summary"></p>
       <details id="preview-skipped">
         <summary>Restaurantes omitidos</summary>
@@ -87,14 +98,24 @@ const events = await sanity.fetch<EventOption[]>(
     </div>
 
     <div class="import__step" id="result-section" hidden>
-      <h2>Listo</h2>
+      <div class="import__step-heading">
+        <span class="import__step-badge import__step-badge--done" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </span>
+        <h2>Listo</h2>
+      </div>
       <p id="result-summary"></p>
     </div>
 
     <div class="import__step" id="photos-section" hidden>
-      <h2>4. Fotos (opcional)</h2>
+      <div class="import__step-heading">
+        <span class="import__step-badge">4</span>
+        <h2>Fotos (opcional)</h2>
+      </div>
       <p class="import__hint">
-        Uno por uno: elegí un restaurante, soltá SUS fotos, confirmá, pasá al siguiente.
+        Uno por uno: elige un restaurante, suelta sus fotos, confirma, pasa al siguiente.
         <span id="photos-progress"></span>
       </p>
       <label class="import__field">
@@ -108,7 +129,12 @@ const events = await sanity.fetch<EventOption[]>(
         tabindex="0"
         aria-label="Elegir fotos de este restaurante"
       >
-        Soltá las fotos de este restaurante acá, o hacé clic para elegirlas
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"></path>
+          <polyline points="7 9 12 4 17 9"></polyline>
+          <line x1="12" y1="4" x2="12" y2="16"></line>
+        </svg>
+        <span>Suelta las fotos de este restaurante acá, o haz clic para elegirlas</span>
       </div>
       <input type="file" id="photos-input" accept="image/*" multiple hidden />
       <div id="photos-preview" class="import__photo-tray"></div>
@@ -156,13 +182,70 @@ const events = await sanity.fetch<EventOption[]>(
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
+    box-shadow: var(--shadow);
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xs);
   }
-  .import__step h2 {
-    margin: 0 0 0.25rem;
+  /* "display" solo se fija por defecto: si se pisa el "display: none" nativo de [hidden] sin
+     condición, un paso oculto (id="...", hidden) queda visible igual, porque CSS de autor le
+     gana al de user-agent aunque tenga menos especificidad. */
+  .import__step[hidden] {
+    display: none;
+  }
+  .import__step-heading {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    margin-bottom: 0.25rem;
+  }
+  .import__step-heading h2 {
+    margin: 0;
     color: var(--color-primary-dark);
+  }
+  .import__step-badge {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    color: var(--color-primary-dark);
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 0.9rem;
+  }
+  .import__step-badge--done {
+    background: #2f7a3d;
+    color: white;
+  }
+  .import__mode-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+  }
+  .import__mode-option {
+    flex: 1 1 200px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 0.9rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+    color: var(--color-text);
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+  }
+  .import__mode-option:has(input:checked) {
+    border-color: var(--color-primary);
+    background: rgba(245, 216, 52, 0.15);
+    font-weight: 600;
+  }
+  .import__mode-option input[type='radio'] {
+    margin: 0;
   }
   .import__field {
     display: flex;
@@ -170,10 +253,6 @@ const events = await sanity.fetch<EventOption[]>(
     gap: 0.25rem;
     font-size: 0.9rem;
     color: var(--color-text);
-  }
-  .import__field input[type='radio'] {
-    display: inline;
-    margin-right: 0.35rem;
   }
   .import__new-event {
     display: flex;
@@ -226,12 +305,17 @@ const events = await sanity.fetch<EventOption[]>(
     color: var(--color-text-muted);
   }
   .import__dropzone {
-    padding: var(--spacing-md);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: var(--spacing-lg) var(--spacing-md);
     border: 2px dashed var(--color-border);
     border-radius: var(--radius);
     text-align: center;
     color: var(--color-text-muted);
     cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease;
   }
   .import__dropzone[data-active='true'] {
     border-color: var(--color-primary);
