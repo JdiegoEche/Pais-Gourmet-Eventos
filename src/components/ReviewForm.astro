@@ -103,11 +103,11 @@ const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
   .review-form button[type='submit']:disabled {
     cursor: default;
   }
-  .review-form button[type='submit'].is-loading {
+  .review-form button[type='submit'][data-loading='true'] {
     padding-left: 2.35rem;
     opacity: 0.85;
   }
-  .review-form button[type='submit'].is-loading::before {
+  .review-form button[type='submit'][data-loading='true']::before {
     content: '';
     position: absolute;
     left: 0.85rem;
@@ -156,7 +156,7 @@ const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
     }
   }
   @media (prefers-reduced-motion: reduce) {
-    .review-form button[type='submit'].is-loading::before {
+    .review-form button[type='submit'][data-loading='true']::before {
       animation: none;
     }
     .review-form__status--animate {
@@ -168,18 +168,13 @@ const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
 {turnstileSiteKey && <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>}
 
 <script>
+  import { withLoading } from '../lib/withLoading';
+
   const form = document.querySelector<HTMLFormElement>('[data-review-form]');
   const status = form?.querySelector<HTMLParagraphElement>('[data-review-status]');
   const submitButton = form?.querySelector<HTMLButtonElement>('[data-submit-button]');
   const defaultButtonText = submitButton?.textContent ?? 'Publicar reseña';
   let successTimeout: ReturnType<typeof setTimeout> | undefined;
-
-  function setLoading(isLoading: boolean) {
-    if (!submitButton) return;
-    submitButton.disabled = isLoading;
-    submitButton.classList.toggle('is-loading', isLoading);
-    if (isLoading) submitButton.textContent = 'Publicando…';
-  }
 
   // Retriggerea la animación de "pop" aunque el mensaje ya tuviera la clase de una reseña
   // anterior: sin sacarla y forzar un reflow antes de volver a agregarla, el navegador no
@@ -191,11 +186,11 @@ const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
     status.classList.add('review-form__status--animate');
   }
 
+  // El disabled/texto-original ya los restaura withLoading en su "finally" — esto solo agrega
+  // el flash verde encima, específico de este formulario.
   function showSuccessPulse() {
     if (!submitButton) return;
     clearTimeout(successTimeout);
-    submitButton.disabled = false;
-    submitButton.classList.remove('is-loading');
     submitButton.classList.add('is-success');
     submitButton.textContent = '¡Publicada! ✓';
     successTimeout = setTimeout(() => {
@@ -206,51 +201,53 @@ const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
 
   form?.addEventListener('submit', async (event) => {
     event.preventDefault();
+    if (!submitButton) return;
     const restaurantSlug = form.dataset.restaurantSlug;
     const formData = new FormData(form);
-    setLoading(true);
 
     try {
-      const response = await fetch('/api/reviews', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          restaurantSlug,
-          name: formData.get('name'),
-          phone: formData.get('phone'),
-          email: formData.get('email'),
-          foodRating: Number(formData.get('foodRating')),
-          serviceRating: Number(formData.get('serviceRating')),
-          ambianceRating: Number(formData.get('ambianceRating')),
-          comment: formData.get('comment'),
-          turnstileToken: formData.get('cf-turnstile-response'),
-        }),
-      });
+      const succeeded = await withLoading(submitButton, 'Publicando…', async () => {
+        const response = await fetch('/api/reviews', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            restaurantSlug,
+            name: formData.get('name'),
+            phone: formData.get('phone'),
+            email: formData.get('email'),
+            foodRating: Number(formData.get('foodRating')),
+            serviceRating: Number(formData.get('serviceRating')),
+            ambianceRating: Number(formData.get('ambianceRating')),
+            comment: formData.get('comment'),
+            turnstileToken: formData.get('cf-turnstile-response'),
+          }),
+        });
 
-      if (!response.ok) {
-        const body = await response.json().catch(() => null);
-        setLoading(false);
+        if (!response.ok) {
+          const body = await response.json().catch(() => null);
+          if (status) {
+            status.textContent =
+              response.status === 400
+                ? 'Revisá el nombre, el celular, el email y el comentario: alguno tiene un formato inválido.'
+                : (body?.error ?? 'No pudimos publicar tu reseña. Intentá de nuevo.');
+            status.dataset.state = 'error';
+            animateStatus();
+          }
+          return false;
+        }
+
+        form.reset();
         if (status) {
-          status.textContent =
-            response.status === 400
-              ? 'Revisá el nombre, el celular, el email y el comentario: alguno tiene un formato inválido.'
-              : (body?.error ?? 'No pudimos publicar tu reseña. Intentá de nuevo.');
-          status.dataset.state = 'error';
+          status.textContent = '¡Gracias por tu reseña!';
+          status.dataset.state = 'success';
           animateStatus();
         }
-        return;
-      }
+        document.dispatchEvent(new CustomEvent('review:created', { detail: { restaurantSlug } }));
+        return true;
+      });
 
-      form.reset();
-      showSuccessPulse();
-      if (status) {
-        status.textContent = '¡Gracias por tu reseña!';
-        status.dataset.state = 'success';
-        animateStatus();
-      }
-      document.dispatchEvent(new CustomEvent('review:created', { detail: { restaurantSlug } }));
+      if (succeeded) showSuccessPulse();
     } catch {
-      setLoading(false);
       if (status) {
         status.textContent = 'No pudimos publicar tu reseña. Revisá tu conexión e intentá de nuevo.';
         status.dataset.state = 'error';

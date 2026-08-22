@@ -248,6 +248,7 @@ const events = await sanity.fetch<EventOption[]>(
 
 <script>
   import type { ParseResult, RestaurantDoc } from '../../lib/admin/parseRestaurantsExcel';
+  import { withLoading } from '../../lib/withLoading';
 
   const eventModeRadios = document.querySelectorAll<HTMLInputElement>('input[name="eventMode"]');
   const eventSelect = document.getElementById('event-select') as HTMLSelectElement;
@@ -270,22 +271,6 @@ const events = await sanity.fetch<EventOption[]>(
   function setStatus(message: string, isError = false) {
     status.textContent = message;
     status.dataset.state = isError ? 'error' : '';
-  }
-
-  // Deshabilita el botón y le cambia el texto mientras dura la promesa, para que quede claro
-  // que está laburando (si no, con el fetch tardando unos segundos parece que no pasó nada).
-  async function withLoading<T>(button: HTMLButtonElement, loadingText: string, task: () => Promise<T>): Promise<T> {
-    const originalText = button.textContent;
-    button.disabled = true;
-    button.dataset.loading = 'true';
-    button.textContent = loadingText;
-    try {
-      return await task();
-    } finally {
-      button.disabled = false;
-      button.dataset.loading = 'false';
-      button.textContent = originalText;
-    }
   }
 
   async function resolveEventId(): Promise<string | null> {
