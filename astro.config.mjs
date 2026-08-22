@@ -6,9 +6,10 @@ import cloudflare from '@astrojs/cloudflare';
 export default defineConfig({
   output: 'static',
   adapter: cloudflare(),
-  image: {
-    remotePatterns: [{ protocol: 'https', hostname: 'cdn.sanity.io' }, { protocol: 'https', hostname: 'picsum.photos' }],
-  },
+  // Sin bloque "image": las imágenes son todas remotas (Sanity CDN) y ya se redimensionan
+  // vía query string con thumb()/thumbSrcSet() (src/lib/image.ts) — el optimizador nativo de
+  // Astro (astro:assets) no se usa en ningún componente, así que este remotePatterns quedaba
+  // configurado sin que nada lo activara.
   vite: {
     server: {
       allowedHosts: ['.trycloudflare.com'],
