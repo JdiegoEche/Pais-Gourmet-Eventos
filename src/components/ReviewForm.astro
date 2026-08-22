@@ -34,7 +34,7 @@ const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
     <textarea name="comment" placeholder="Contanos cómo fue tu experiencia" required maxlength="300"></textarea>
   </label>
   {turnstileSiteKey && <div class="cf-turnstile" data-sitekey={turnstileSiteKey}></div>}
-  <button type="submit">Publicar reseña</button>
+  <button type="submit" data-submit-button>Publicar reseña</button>
   <p class="review-form__status" data-review-status role="status"></p>
 </form>
 
@@ -83,6 +83,7 @@ const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
     resize: vertical;
   }
   .review-form button[type='submit'] {
+    position: relative;
     align-self: flex-start;
     padding: 0.6rem 1.5rem;
     background: var(--color-primary);
@@ -91,9 +92,36 @@ const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
     border-radius: var(--radius);
     font-weight: 600;
     cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
   }
-  .review-form button[type='submit']:hover {
+  .review-form button[type='submit']:hover:not(:disabled) {
     background: var(--color-primary-dark);
+  }
+  .review-form button[type='submit']:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+  .review-form button[type='submit']:disabled {
+    cursor: default;
+  }
+  .review-form button[type='submit'].is-loading {
+    padding-left: 2.35rem;
+    opacity: 0.85;
+  }
+  .review-form button[type='submit'].is-loading::before {
+    content: '';
+    position: absolute;
+    left: 0.85rem;
+    top: 50%;
+    width: 0.9rem;
+    height: 0.9rem;
+    margin-top: -0.45rem;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: review-form-spin 0.6s linear infinite;
+  }
+  .review-form button[type='submit'].is-success {
+    background: #2f7a3d;
   }
   .review-form__status {
     margin: 0;
@@ -106,8 +134,34 @@ const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
   .review-form__status[data-state='error'] {
     color: #b3261e;
   }
+  .review-form__status--animate {
+    animation: review-form-status-pop 0.35s ease;
+  }
   .required-marker {
     color: #b3261e;
+  }
+  @keyframes review-form-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @keyframes review-form-status-pop {
+    from {
+      opacity: 0;
+      transform: translateY(-4px) scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .review-form button[type='submit'].is-loading::before {
+      animation: none;
+    }
+    .review-form__status--animate {
+      animation: none;
+    }
   }
 </style>
 
@@ -116,11 +170,45 @@ const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
 <script>
   const form = document.querySelector<HTMLFormElement>('[data-review-form]');
   const status = form?.querySelector<HTMLParagraphElement>('[data-review-status]');
+  const submitButton = form?.querySelector<HTMLButtonElement>('[data-submit-button]');
+  const defaultButtonText = submitButton?.textContent ?? 'Publicar reseña';
+  let successTimeout: ReturnType<typeof setTimeout> | undefined;
+
+  function setLoading(isLoading: boolean) {
+    if (!submitButton) return;
+    submitButton.disabled = isLoading;
+    submitButton.classList.toggle('is-loading', isLoading);
+    if (isLoading) submitButton.textContent = 'Publicando…';
+  }
+
+  // Retriggerea la animación de "pop" aunque el mensaje ya tuviera la clase de una reseña
+  // anterior: sin sacarla y forzar un reflow antes de volver a agregarla, el navegador no
+  // vuelve a correr la misma animación CSS.
+  function animateStatus() {
+    if (!status) return;
+    status.classList.remove('review-form__status--animate');
+    void status.offsetWidth;
+    status.classList.add('review-form__status--animate');
+  }
+
+  function showSuccessPulse() {
+    if (!submitButton) return;
+    clearTimeout(successTimeout);
+    submitButton.disabled = false;
+    submitButton.classList.remove('is-loading');
+    submitButton.classList.add('is-success');
+    submitButton.textContent = '¡Publicada! ✓';
+    successTimeout = setTimeout(() => {
+      submitButton.classList.remove('is-success');
+      submitButton.textContent = defaultButtonText;
+    }, 1400);
+  }
 
   form?.addEventListener('submit', async (event) => {
     event.preventDefault();
     const restaurantSlug = form.dataset.restaurantSlug;
     const formData = new FormData(form);
+    setLoading(true);
 
     try {
       const response = await fetch('/api/reviews', {
@@ -141,26 +229,32 @@ const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
 
       if (!response.ok) {
         const body = await response.json().catch(() => null);
+        setLoading(false);
         if (status) {
           status.textContent =
             response.status === 400
               ? 'Revisá el nombre, el celular, el email y el comentario: alguno tiene un formato inválido.'
               : (body?.error ?? 'No pudimos publicar tu reseña. Intentá de nuevo.');
           status.dataset.state = 'error';
+          animateStatus();
         }
         return;
       }
 
       form.reset();
+      showSuccessPulse();
       if (status) {
         status.textContent = '¡Gracias por tu reseña!';
         status.dataset.state = 'success';
+        animateStatus();
       }
       document.dispatchEvent(new CustomEvent('review:created', { detail: { restaurantSlug } }));
     } catch {
+      setLoading(false);
       if (status) {
         status.textContent = 'No pudimos publicar tu reseña. Revisá tu conexión e intentá de nuevo.';
         status.dataset.state = 'error';
+        animateStatus();
       }
     }
   });
