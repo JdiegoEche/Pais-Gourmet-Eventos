@@ -1,4 +1,5 @@
 import * as XLSX from 'xlsx';
+import { stripAccents, slugify } from '../slugify';
 
 // Puerto a TypeScript de migration/scripts/transform.py — mismas reglas, misma forma de reporte.
 // A diferencia del script Python, las franjas de precio se detectan leyendo los headers en vez
@@ -96,18 +97,6 @@ export interface QualityReport {
 export interface ParseResult {
   documents: RestaurantDoc[];
   report: QualityReport;
-}
-
-function stripAccents(text: string): string {
-  return text.normalize('NFD').replace(/[̀-ͯ]/g, '');
-}
-
-function slugify(name: string): string {
-  return stripAccents(name)
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '');
 }
 
 function cleanText(value: unknown): string {
@@ -315,7 +304,10 @@ export function parseRestaurantsExcel(buffer: ArrayBuffer, eventId: string): Par
     usedSlugs.add(slug);
 
     const doc: RestaurantDoc = {
-      _id: `restaurant-${slug}`,
+      // El _id incluye el eventId: dos eventos distintos pueden tener un restaurante con el
+      // mismo nombre, y como el import usa createOrReplace, compartir _id haría que importar
+      // el Excel de un evento nuevo sobreescriba (en vez de sumar) el restaurante del otro evento.
+      _id: `restaurant-${eventId}-${slug}`,
       _type: 'restaurant',
       name,
       slug: { _type: 'slug', current: slug },

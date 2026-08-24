@@ -114,31 +114,48 @@ const events = await sanity.fetch<EventOption[]>(
         <span class="import__step-badge">4</span>
         <h2>Fotos (opcional)</h2>
       </div>
-      <p class="import__hint">
-        Uno por uno: elige un restaurante, suelta sus fotos, confirma, pasa al siguiente.
-        <span id="photos-progress"></span>
-      </p>
-      <label class="import__field">
-        Restaurante
-        <select id="photo-restaurant-select"></select>
-      </label>
-      <div
-        id="photos-dropzone"
-        class="import__dropzone"
-        role="button"
-        tabindex="0"
-        aria-label="Elegir fotos de este restaurante"
-      >
-        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"></path>
-          <polyline points="7 9 12 4 17 9"></polyline>
-          <line x1="12" y1="4" x2="12" y2="16"></line>
-        </svg>
-        <span>Suelta las fotos de este restaurante acá, o haz clic para elegirlas</span>
+      <div class="import__bulk-photos">
+        <p class="import__hint">
+          Carga masiva: elegí una carpeta con una subcarpeta por restaurante (el nombre de cada
+          subcarpeta se empareja automáticamente con el restaurante). Revisá los emparejamientos
+          antes de subir.
+        </p>
+        <label class="import__field">
+          Carpeta con subcarpetas por restaurante
+          <input type="file" id="bulk-folder-input" multiple {...{ webkitdirectory: true }} />
+        </label>
+        <div id="bulk-match-list" class="import__bulk-match-list"></div>
+        <button type="button" id="btn-bulk-upload" hidden>Subir todas las fotos</button>
       </div>
-      <input type="file" id="photos-input" accept="image/*" multiple hidden />
-      <div id="photos-preview" class="import__photo-tray"></div>
-      <button type="button" id="btn-upload-photos">Subir fotos para este restaurante</button>
+
+      <details class="import__one-by-one">
+        <summary>Subir foto por foto (para correcciones puntuales)</summary>
+        <p class="import__hint">
+          Elige un restaurante, suelta sus fotos, confirma, pasa al siguiente.
+          <span id="photos-progress"></span>
+        </p>
+        <label class="import__field">
+          Restaurante
+          <select id="photo-restaurant-select"></select>
+        </label>
+        <div
+          id="photos-dropzone"
+          class="import__dropzone"
+          role="button"
+          tabindex="0"
+          aria-label="Elegir fotos de este restaurante"
+        >
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"></path>
+            <polyline points="7 9 12 4 17 9"></polyline>
+            <line x1="12" y1="4" x2="12" y2="16"></line>
+          </svg>
+          <span>Suelta las fotos de este restaurante acá, o haz clic para elegirlas</span>
+        </div>
+        <input type="file" id="photos-input" accept="image/*" multiple hidden />
+        <div id="photos-preview" class="import__photo-tray"></div>
+        <button type="button" id="btn-upload-photos">Subir fotos para este restaurante</button>
+      </details>
     </div>
 
     <p class="import__status" id="status" role="status"></p>
@@ -331,6 +348,61 @@ const events = await sanity.fetch<EventOption[]>(
     gap: 0.4rem;
     min-height: 3.5rem;
   }
+  .import__bulk-photos {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--color-border);
+  }
+  .import__bulk-match-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .import__bulk-match-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.5rem 0.6rem;
+    border: 1px solid var(--color-border);
+    border-radius: calc(var(--radius) / 2);
+    font-size: 0.85rem;
+  }
+  .import__bulk-match-row[data-matched='false'] {
+    border-color: #b3261e;
+    background: rgba(179, 38, 30, 0.06);
+  }
+  .import__bulk-match-row[data-uploaded='true'] {
+    border-color: #2f7a3d;
+    background: rgba(47, 122, 61, 0.08);
+  }
+  .import__bulk-match-folder {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .import__bulk-match-count {
+    flex: 0 0 auto;
+    color: var(--color-text-muted);
+  }
+  .import__bulk-match-row select {
+    flex: 1 1 220px;
+  }
+  .import__one-by-one {
+    border-top: 1px solid var(--color-border);
+    padding-top: var(--spacing-sm);
+  }
+  .import__one-by-one summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--color-text-muted);
+  }
+  .import__one-by-one > *:not(summary) {
+    margin-top: var(--spacing-xs);
+  }
   /* Las miniaturas se crean con document.createElement en runtime, así que no reciben
      el atributo de scope de Astro — deben quedar como regla global (mismo patrón que
      PhotoGallery.astro para sus dots). */
@@ -346,6 +418,7 @@ const events = await sanity.fetch<EventOption[]>(
 <script>
   import type { ParseResult, RestaurantDoc } from '../../lib/admin/parseRestaurantsExcel';
   import { withLoading } from '../../lib/withLoading';
+  import { slugify } from '../../lib/slugify';
 
   const eventModeRadios = document.querySelectorAll<HTMLInputElement>('input[name="eventMode"]');
   const eventSelect = document.getElementById('event-select') as HTMLSelectElement;
@@ -621,6 +694,144 @@ const events = await sanity.fetch<EventOption[]>(
       if (e.dataTransfer?.files) addFiles([...e.dataTransfer.files]);
     });
   }
+
+  // --- Carga masiva de fotos por carpetas: una subcarpeta por restaurante ---
+
+  interface BulkFolderMatch {
+    folderName: string;
+    files: File[];
+    restaurantId: string; // '' si no se pudo emparejar / se desasignó a mano
+    uploaded: boolean;
+  }
+
+  let bulkMatches: BulkFolderMatch[] = [];
+
+  function renderBulkMatchList() {
+    const container = document.getElementById('bulk-match-list') as HTMLElement;
+    container.innerHTML = '';
+    for (const match of bulkMatches) {
+      const row = document.createElement('div');
+      row.className = 'import__bulk-match-row';
+      row.dataset.matched = String(Boolean(match.restaurantId));
+      row.dataset.uploaded = String(match.uploaded);
+
+      const folderSpan = document.createElement('span');
+      folderSpan.className = 'import__bulk-match-folder';
+      folderSpan.textContent = match.folderName;
+      folderSpan.title = match.folderName;
+
+      const countSpan = document.createElement('span');
+      countSpan.className = 'import__bulk-match-count';
+      countSpan.textContent = `${match.files.length} foto(s)`;
+
+      const select = document.createElement('select');
+      const emptyOption = document.createElement('option');
+      emptyOption.value = '';
+      emptyOption.textContent = '— Sin asignar —';
+      select.appendChild(emptyOption);
+      for (const r of photoRestaurants) {
+        const option = document.createElement('option');
+        option.value = r._id;
+        option.textContent = r.name;
+        select.appendChild(option);
+      }
+      select.value = match.restaurantId;
+      select.disabled = match.uploaded;
+      select.addEventListener('change', () => {
+        match.restaurantId = select.value;
+        row.dataset.matched = String(Boolean(match.restaurantId));
+      });
+
+      row.append(folderSpan, countSpan, select);
+      container.appendChild(row);
+    }
+
+    (document.getElementById('btn-bulk-upload') as HTMLButtonElement).hidden = bulkMatches.length === 0;
+  }
+
+  document.getElementById('bulk-folder-input')?.addEventListener('change', (event) => {
+    const input = event.currentTarget as HTMLInputElement;
+    const files = input.files ? [...input.files] : [];
+    input.value = '';
+    if (files.length === 0) return;
+
+    if (photoRestaurants.length === 0) {
+      setStatus('Primero importá el Excel o cargá los restaurantes de un evento existente.', true);
+      return;
+    }
+
+    const byFolder = new Map<string, File[]>();
+    for (const file of files) {
+      if (!file.type.startsWith('image/')) continue;
+      // webkitRelativePath: "carpeta-elegida/subcarpeta-restaurante/foto.jpg" — la subcarpeta
+      // inmediatamente bajo la raíz es la que identifica al restaurante.
+      const relPath = (file as File & { webkitRelativePath?: string }).webkitRelativePath || file.name;
+      const parts = relPath.split('/');
+      const folderName = parts.length > 2 ? parts[1] : (parts[0] ?? file.name);
+      const list = byFolder.get(folderName) ?? [];
+      list.push(file);
+      byFolder.set(folderName, list);
+    }
+
+    const restaurantIdBySlug = new Map(photoRestaurants.map((r) => [slugify(r.name), r._id]));
+
+    bulkMatches = [...byFolder.entries()].map(([folderName, folderFiles]) => ({
+      folderName,
+      files: folderFiles,
+      restaurantId: restaurantIdBySlug.get(slugify(folderName)) ?? '',
+      uploaded: false,
+    }));
+
+    renderBulkMatchList();
+    const matchedCount = bulkMatches.filter((m) => m.restaurantId).length;
+    setStatus(`${bulkMatches.length} carpeta(s) encontradas, ${matchedCount} emparejadas automáticamente. Revisá antes de subir.`);
+  });
+
+  document.getElementById('btn-bulk-upload')?.addEventListener('click', async (event) => {
+    const button = event.currentTarget as HTMLButtonElement;
+    const pending = bulkMatches.filter((m) => m.restaurantId && !m.uploaded);
+    if (pending.length === 0) {
+      setStatus('No hay carpetas asignadas a un restaurante para subir.', true);
+      return;
+    }
+
+    await withLoading(button, 'Subiendo...', async () => {
+      let done = 0;
+      let failedCount = 0;
+      for (const match of pending) {
+        done += 1;
+        setStatus(`Subiendo ${match.folderName} (${done} de ${pending.length})...`);
+        try {
+          const compressed = await compressFiles(match.files);
+          const formData = new FormData();
+          for (const file of compressed) formData.append(`photo::${match.restaurantId}`, file);
+
+          const response = await fetch('/api/admin/restaurants/photos', { method: 'POST', body: formData });
+          const body = await response.json();
+          const failedResult = response.ok
+            ? body.results.find((r: { restaurantId: string; error?: string }) => r.restaurantId === match.restaurantId && r.error)
+            : null;
+
+          if (!response.ok || failedResult) {
+            failedCount += 1;
+            setStatus(`Falló ${match.folderName}: ${failedResult?.error ?? body.error ?? 'error desconocido'}`, true);
+            continue;
+          }
+
+          match.uploaded = true;
+          uploadedRestaurantIds.add(match.restaurantId);
+        } catch (error) {
+          failedCount += 1;
+          setStatus(`Falló ${match.folderName}: ${error instanceof Error ? error.message : 'error desconocido'}`, true);
+        }
+      }
+
+      renderBulkMatchList();
+      renderRestaurantOptions();
+      const okCount = pending.length - failedCount;
+      setStatus(`${okCount} de ${pending.length} carpeta(s) subidas.`, failedCount > 0);
+    });
+  });
 
   document.getElementById('btn-load-existing-photos')?.addEventListener('click', async (event) => {
     const button = event.currentTarget as HTMLButtonElement;
