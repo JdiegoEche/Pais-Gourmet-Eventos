@@ -443,6 +443,12 @@ const events = await sanity.fetch<EventOption[]>(
     status.dataset.state = isError ? 'error' : '';
   }
 
+  function escapeHtml(value: string) {
+    const div = document.createElement('div');
+    div.textContent = value;
+    return div.innerHTML;
+  }
+
   async function resolveEventId(): Promise<string | null> {
     const isNew = (document.querySelector('input[name="eventMode"]:checked') as HTMLInputElement)?.value === 'new';
     if (!isNew) {
@@ -514,11 +520,13 @@ const events = await sanity.fetch<EventOption[]>(
         `${report.created.length} restaurantes listos para importar. ${report.skipped.length} omitidos. ${Object.keys(report.warnings).length} con advertencias no bloqueantes.`;
 
       const skippedList = document.getElementById('preview-skipped-list') as HTMLElement;
-      skippedList.innerHTML = report.skipped.map((s) => `<li>${s.name} — ${s.reason}</li>`).join('');
+      skippedList.innerHTML = report.skipped
+        .map((s) => `<li>${escapeHtml(s.name)} — ${escapeHtml(s.reason)}</li>`)
+        .join('');
 
       const warningsList = document.getElementById('preview-warnings-list') as HTMLElement;
       warningsList.innerHTML = Object.entries(report.warnings)
-        .map(([name, issues]) => `<li>${name} — ${issues.join(', ')}</li>`)
+        .map(([name, issues]) => `<li>${escapeHtml(name)} — ${escapeHtml(issues.join(', '))}</li>`)
         .join('');
 
       setStatus('Vista previa lista. Revisá y confirmá.');
