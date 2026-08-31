@@ -9,7 +9,8 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "export:leads": "node migration/scripts/export-leads.mjs"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.2.3",

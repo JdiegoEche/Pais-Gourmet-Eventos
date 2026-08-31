@@ -2,6 +2,7 @@ import event from './event'
 import leadSignup from './leadSignup'
 import restaurant from './restaurant'
 import review from './review'
+import reviewContact from './leads/reviewContact'
 import features from './objects/features'
 import menu from './objects/menu'
 import menuItem from './objects/menuItem'
@@ -11,12 +12,12 @@ import sponsorLogo from './objects/sponsorLogo'
 import zoneShowcaseItem from './objects/zoneShowcaseItem'
 import priceRangeItem from './objects/priceRangeItem'
 
-export const schemaTypes = [
+// Dataset público `production`: todo lo que se muestra en el sitio. Sin PII.
+export const productionSchemaTypes = [
   // documents
   event,
   restaurant,
   review,
-  leadSignup,
   // objects
   menu,
   menuItem,
@@ -27,3 +28,6 @@ export const schemaTypes = [
   zoneShowcaseItem,
   priceRangeItem,
 ]
+
+// Dataset privado `leads`: datos personales de contacto. Nunca se lee desde el sitio.
+export const leadsSchemaTypes = [leadSignup, reviewContact]

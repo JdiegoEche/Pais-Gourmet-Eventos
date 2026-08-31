@@ -11,18 +11,8 @@ export default defineType({
       type: 'string',
       validation: (Rule) => Rule.required(),
     }),
-    defineField({
-      name: 'phone',
-      title: 'Celular',
-      description: 'Dato privado para poder contactar a quien dejó la reseña. Nunca se muestra en el sitio.',
-      type: 'string',
-    }),
-    defineField({
-      name: 'email',
-      title: 'Correo electrónico',
-      description: 'Dato privado para poder contactar a quien dejó la reseña. Nunca se muestra en el sitio.',
-      type: 'string',
-    }),
+    // El contacto (celular/correo) de la respuesta NO se guarda acá: va al array `replies`
+    // del doc `reviewContact` correspondiente en el dataset privado `leads`.
     defineField({
       name: 'message',
       title: 'Mensaje',

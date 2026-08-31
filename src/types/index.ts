@@ -81,8 +81,8 @@ export interface Restaurant {
 
 export interface ReviewReply {
   name: string;
-  // Mismo criterio de privacidad que en Review: se piden para poder contactar a quien dejó
-  // la reseña original, pero nunca se exponen por la API pública ni se muestran en el sitio.
+  // Solo en el input del formulario (CreateReviewReplyInput): el repo los escribe al dataset
+  // privado `leads` (doc reviewContact), nunca a `production` ni a la API pública.
   phone?: string;
   email?: string;
   message: string;
@@ -93,8 +93,8 @@ export interface Review {
   id: string;
   restaurantSlug: string;
   name: string;
-  // Datos de contacto privados: se piden en el formulario para alimentar la base de datos
-  // de leads, pero nunca se exponen por la API pública ni se muestran en el sitio.
+  // Solo en el input del formulario (CreateReviewInput): el repo los escribe al dataset
+  // privado `leads` (doc reviewContact), nunca a `production` ni a la API pública.
   phone?: string;
   email?: string;
   rating: 1 | 2 | 3 | 4 | 5;
@@ -111,4 +111,15 @@ export interface LeadSignup {
   email: string;
   phone: string;
   createdAt: string;
+}
+
+// Doc del dataset privado `leads`: contacto de una reseña y de sus respuestas.
+export interface ReviewContact {
+  reviewId: string;
+  restaurantSlug: string;
+  name: string;
+  phone: string;
+  email: string;
+  createdAt: string;
+  replies: { name: string; phone: string; email: string; createdAt: string }[];
 }
