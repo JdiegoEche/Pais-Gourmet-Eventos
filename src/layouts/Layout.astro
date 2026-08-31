@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import { getEvent } from '../lib/data';
+import { thumb } from '../lib/image';
 
 interface Props {
   title: string;
@@ -9,6 +10,7 @@ interface Props {
 const { title } = Astro.props;
 const event = await getEvent();
 const siteName = event?.name ?? 'País Gourmet';
+const logoUrl = event?.logoUrl ? thumb(event.logoUrl, 320) : null;
 ---
 
 <html lang="es">
@@ -21,7 +23,13 @@ const siteName = event?.name ?? 'País Gourmet';
   </head>
   <body>
     <header class="site-header">
-      <a class="site-header__brand" href="/">{siteName}</a>
+      <a class="site-header__brand" href="/" aria-label={siteName}>
+        {logoUrl ? (
+          <img class="site-header__logo" src={logoUrl} alt={siteName} width="160" height="40" />
+        ) : (
+          siteName
+        )}
+      </a>
       <button
         type="button"
         class="site-header__toggle"
@@ -63,11 +71,20 @@ const siteName = event?.name ?? 'País Gourmet';
     border-bottom: 1px solid var(--color-border);
   }
   .site-header__brand {
+    display: inline-flex;
+    align-items: center;
     font-family: var(--font-heading);
     font-size: 1.25rem;
     font-weight: 700;
     color: var(--color-primary-dark);
     text-decoration: none;
+  }
+  .site-header__logo {
+    display: block;
+    height: 40px;
+    width: auto;
+    max-width: min(60vw, 220px);
+    object-fit: contain;
   }
   .site-header__toggle {
     display: none;

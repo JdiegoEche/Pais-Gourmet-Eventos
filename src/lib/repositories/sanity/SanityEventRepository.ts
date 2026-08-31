@@ -8,6 +8,7 @@ export class SanityEventRepository implements EventRepository {
       `*[_type == "event" && slug.current == $eventSlug][0]{
         "slug": slug.current,
         name,
+        "logoUrl": logo.asset->url,
         startDate,
         endDate,
         whatIncludes,

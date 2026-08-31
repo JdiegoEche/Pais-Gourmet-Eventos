@@ -19,6 +19,13 @@ export default defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
+      name: 'logo',
+      title: 'Logo',
+      description:
+        'Logo del evento que se muestra en la barra de navegación en lugar del nombre. Preferí PNG con fondo transparente o SVG.',
+      type: 'image',
+    }),
+    defineField({
       name: 'startDate',
       title: 'Fecha de inicio',
       type: 'date',

@@ -1,6 +1,7 @@
 export interface EventData {
   slug: string;
   name: string;
+  logoUrl: string | null;
   startDate: string;
   endDate: string;
   whatIncludes: string;

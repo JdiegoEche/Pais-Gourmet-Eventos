@@ -5,6 +5,7 @@ type ReviewSeed = Omit<Review, 'id' | 'replies'>;
 export const mockEvent: EventData = {
   slug: 'pais-gourmet-demo',
   name: 'País Gourmet Demo',
+  logoUrl: null,
   startDate: '2026-08-01',
   endDate: '2026-08-31',
   whatIncludes:
