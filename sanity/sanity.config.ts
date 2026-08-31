@@ -7,7 +7,7 @@ export default defineConfig([
   {
     name: 'default',
     title: 'pais-gourmet-eventos',
-    basePath: '/',
+    basePath: '/production',
     projectId: 'xo45blck',
     dataset: 'production',
     plugins: [structureTool(), visionTool()],
