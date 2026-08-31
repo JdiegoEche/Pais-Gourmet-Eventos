@@ -50,8 +50,19 @@ async function leadSignupRepository() {
   return new SanityLeadSignupRepository();
 }
 
+// getEvent() se pide en el home y en cada una de las ~167 páginas de restaurante (vía
+// getWeeklyRecommendedRestaurants), pero el evento casi no cambia durante una sesión de
+// build/dev — cachear por unos segundos evita repetir el mismo round-trip a Sanity 167 veces.
+const EVENT_CACHE_TTL_MS = 30_000;
+let eventCache: { value: EventData | null; expiresAt: number } | null = null;
+
 export async function getEvent(): Promise<EventData | null> {
-  return (await eventRepository()).getEvent();
+  if (eventCache && eventCache.expiresAt > Date.now()) {
+    return eventCache.value;
+  }
+  const value = await (await eventRepository()).getEvent();
+  eventCache = { value, expiresAt: Date.now() + EVENT_CACHE_TTL_MS };
+  return value;
 }
 
 // Reciben el event ya resuelto en vez de volver a pedirlo: el home (único caller) ya lo tiene

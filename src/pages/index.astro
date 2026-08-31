@@ -12,10 +12,11 @@ import SignupForm from '../components/SignupForm.astro';
 import SponsorsSection from '../components/SponsorsSection.astro';
 import { getEvent, getFeaturedRestaurants, getAllRestaurants, getHeroRecommendedRestaurants } from '../lib/data';
 
-const event = await getEvent();
-const featuredRestaurants = await getFeaturedRestaurants(event);
-const allRestaurants = await getAllRestaurants();
-const heroRecommended = await getHeroRecommendedRestaurants(event);
+const [event, allRestaurants] = await Promise.all([getEvent(), getAllRestaurants()]);
+const [featuredRestaurants, heroRecommended] = await Promise.all([
+  getFeaturedRestaurants(event),
+  getHeroRecommendedRestaurants(event),
+]);
 ---
 
 <Layout title={event?.name ?? 'País Gourmet'}>
