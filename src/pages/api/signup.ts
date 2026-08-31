@@ -1,6 +1,8 @@
 import type { APIRoute } from 'astro';
 import { createLeadSignup } from '../../lib/data';
 import { isRateLimited } from '../../lib/rateLimit';
+import { isTurnstileValid } from '../../lib/turnstile';
+import { getClientAddress } from '../../lib/clientAddress';
 
 export const prerender = false;
 
@@ -30,7 +32,7 @@ export const POST: APIRoute = async (context) => {
     return new Response(JSON.stringify({ error: 'Datos inválidos' }), { status: 400 });
   }
 
-  const { name, email, phone } = body as Record<string, unknown>;
+  const { name, email, phone, turnstileToken } = body as Record<string, unknown>;
 
   if (
     typeof name !== 'string' ||
@@ -42,6 +44,12 @@ export const POST: APIRoute = async (context) => {
     !PHONE_PATTERN.test(phone.trim())
   ) {
     return new Response(JSON.stringify({ error: 'Datos inválidos' }), { status: 400 });
+  }
+
+  if (!(await isTurnstileValid(turnstileToken, getClientAddress(context)))) {
+    return new Response(JSON.stringify({ error: 'No pudimos verificar que eres una persona. Intentá de nuevo.' }), {
+      status: 403,
+    });
   }
 
   try {
