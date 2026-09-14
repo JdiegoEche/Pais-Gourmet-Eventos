@@ -2,6 +2,7 @@ import {defineConfig} from 'sanity'
 import {structureTool} from 'sanity/structure'
 import {visionTool} from '@sanity/vision'
 import {productionSchemaTypes, leadsSchemaTypes} from './schemaTypes'
+import {exportLeadsTool} from './tools/exportLeadsTool'
 
 export default defineConfig([
   {
@@ -25,5 +26,6 @@ export default defineConfig([
     schema: {
       types: leadsSchemaTypes,
     },
+    tools: [exportLeadsTool],
   },
 ])
