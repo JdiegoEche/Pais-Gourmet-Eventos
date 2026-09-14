@@ -74,6 +74,7 @@ export interface Restaurant {
   menuHighlights: MenuHighlight[];
   youtubeVideoUrl?: string;
   vegetarianOption: boolean;
+  isClosed: boolean;
   features: RestaurantFeatures;
   gallery: string[];
   reviewCount: number;

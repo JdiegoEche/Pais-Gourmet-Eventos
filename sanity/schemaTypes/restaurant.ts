@@ -110,6 +110,14 @@ export default defineType({
       initialValue: false,
     }),
     defineField({
+      name: 'isClosed',
+      title: 'Cerrado temporalmente',
+      description:
+        'Activá esta opción cuando el restaurante no esté atendiendo (vacaciones, remodelación, etc.). Mientras esté activa, su tarjeta en el sitio se muestra marcada como "Cerrado".',
+      type: 'boolean',
+      initialValue: false,
+    }),
+    defineField({
       name: 'features',
       title: 'Servicios',
       type: 'features',

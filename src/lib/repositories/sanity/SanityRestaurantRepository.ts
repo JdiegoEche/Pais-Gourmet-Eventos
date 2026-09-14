@@ -19,6 +19,7 @@ const restaurantProjection = `{
   "menuHighlights": menuHighlights[]{ "icon": icon.asset->url, label },
   youtubeVideoUrl,
   vegetarianOption,
+  "isClosed": coalesce(isClosed, false),
   features,
   "gallery": gallery[].asset->url,
   "reviewCount": count(*[_type == "review" && references(^._id)])

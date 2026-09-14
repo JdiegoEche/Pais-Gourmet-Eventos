@@ -57,6 +57,11 @@ const firstPhotoSrcSet = restaurant.gallery.length > 0 ? thumbSrcSet(restaurant.
         </button>
       </>
     )}
+    {restaurant.isClosed && (
+      <div class="restaurant-card__closed">
+        <span>Cerrado</span>
+      </div>
+    )}
   </div>
   <div class="restaurant-card__body">
     <h3>{restaurant.name}</h3>
@@ -127,6 +132,26 @@ const firstPhotoSrcSet = restaurant.gallery.length > 0 ? thumbSrcSet(restaurant.
   }
   .restaurant-card__nav--next {
     right: 0.5rem;
+  }
+  .restaurant-card__closed {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.78);
+    /* No bloquea clics: el carrusel de fotos sigue usable debajo de la etiqueta. */
+    pointer-events: none;
+  }
+  .restaurant-card__closed span {
+    padding: 0.35rem 1rem;
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    box-shadow: var(--shadow);
   }
   .restaurant-card__body {
     padding: var(--spacing-sm);
