@@ -34,11 +34,14 @@ export const POST: APIRoute = async (context) => {
     return new Response(JSON.stringify({ error: 'Datos inválidos' }), { status: 400 });
   }
 
-  const { restaurantSlug, name, phone, email, foodRating, serviceRating, ambianceRating, comment, turnstileToken } =
+  const { restaurantSlug, name, phone, email, foodRating, serviceRating, ambianceRating, comment, menuKey, turnstileToken } =
     body as Record<string, unknown>;
 
   const isValidSubRating = (value: unknown): value is 1 | 2 | 3 | 4 | 5 =>
     Number.isInteger(value) && (value as number) >= 1 && (value as number) <= 5;
+
+  const isValidMenuKey = (v: unknown): v is string =>
+    typeof v === 'string' && v.trim().length > 0 && v.trim().length <= 64;
 
   if (
     typeof restaurantSlug !== 'string' ||
@@ -54,7 +57,8 @@ export const POST: APIRoute = async (context) => {
     comment.trim().length > MAX_COMMENT_LENGTH ||
     !isValidSubRating(foodRating) ||
     !isValidSubRating(serviceRating) ||
-    !isValidSubRating(ambianceRating)
+    !isValidSubRating(ambianceRating) ||
+    (menuKey !== undefined && !isValidMenuKey(menuKey))
   ) {
     return new Response(JSON.stringify({ error: 'Datos inválidos' }), { status: 400 });
   }
@@ -78,6 +82,7 @@ export const POST: APIRoute = async (context) => {
       serviceRating,
       ambianceRating,
       comment: comment.trim(),
+      menuKey: menuKey !== undefined ? (menuKey as string).trim() : undefined,
     });
     const { id, name: publicName, rating: publicRating, foodRating: fr, serviceRating: sr, ambianceRating: ar, comment: publicComment, createdAt } = review;
     return new Response(
