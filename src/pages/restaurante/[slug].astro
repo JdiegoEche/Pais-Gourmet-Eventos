@@ -340,7 +340,7 @@ const videoEmbedUrl = youtubeEmbedUrl(restaurant.youtubeVideoUrl);
       hidden
     >
       <ReviewList restaurantSlug={restaurant.slug} reviews={reviews} />
-      <ReviewForm restaurantSlug={restaurant.slug} />
+      <ReviewForm restaurantSlug={restaurant.slug} menus={restaurant.menus} />
     </section>
 
   </article>

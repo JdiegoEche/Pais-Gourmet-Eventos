@@ -86,6 +86,7 @@ export const mockRestaurants: Restaurant[] = [
     hours: '- Martes a viernes de 12:00 m a 9:00 pm\n\n- Sábado y domingo de 12:00 m a 11:00 pm',
     menus: [
       {
+        _key: 'menu-0',
         name: 'Menú Tulpa',
         currentPrice: 85000,
         previousPrice: 105000,
@@ -118,6 +119,7 @@ export const mockRestaurants: Restaurant[] = [
     hours: '- Todos los días de 12:00 m a 10:00 pm\n\n- Viernes y sábado hasta las 11:30 pm',
     menus: [
       {
+        _key: 'menu-0',
         name: 'Menú Toscana',
         currentPrice: 95000,
         previousPrice: 120000,
@@ -128,6 +130,7 @@ export const mockRestaurants: Restaurant[] = [
         ],
       },
       {
+        _key: 'menu-1',
         name: 'Menú Sorrento',
         currentPrice: 65000,
         items: [
@@ -158,6 +161,7 @@ export const mockRestaurants: Restaurant[] = [
     hours: '- Lunes a viernes de 12:00 m a 8:00 pm\n\n- Sábado y domingo de 12:00 m a 8:00 pm',
     menus: [
       {
+        _key: 'menu-0',
         name: 'Menú Cafetero',
         currentPrice: 65000,
         previousPrice: 78000,
@@ -190,6 +194,7 @@ export const mockRestaurants: Restaurant[] = [
     hours: '- Martes a domingo de 12:00 m a 10:00 pm\n\n- Lunes cerrado',
     menus: [
       {
+        _key: 'menu-0',
         name: 'Menú Umami',
         currentPrice: 89000,
         previousPrice: 110000,
@@ -222,6 +227,7 @@ export const mockRestaurants: Restaurant[] = [
     hours: '- Todos los días de 12:00 m a 11:00 pm',
     menus: [
       {
+        _key: 'menu-0',
         name: 'Menú Parrillero',
         currentPrice: 98000,
         previousPrice: 125000,
@@ -253,6 +259,7 @@ export const mockRestaurants: Restaurant[] = [
     hours: '- Martes a jueves de 12:00 m a 9:00 pm\n\n- Viernes y sábado de 12:00 m a 11:00 pm\n\n- Domingo de 12:00 m a 6:00 pm',
     menus: [
       {
+        _key: 'menu-0',
         name: 'Menú Mediterráneo',
         currentPrice: 92000,
         previousPrice: 115000,
@@ -393,6 +400,7 @@ function generateRestaurants(count: number): Restaurant[] {
     const basePrice = 45000 + (i % 8) * 9000;
     const menuCount = i % 5 === 0 ? 2 : 1;
     const menus = Array.from({ length: menuCount }, (_, m) => ({
+      _key: `menu-${m}`,
       name: m === 0 ? `Menú ${core}` : `Menú ${NAME_CORES[(i + m) % NAME_CORES.length]}`,
       currentPrice: basePrice + m * 8000,
       previousPrice: basePrice + m * 8000 + 20000,

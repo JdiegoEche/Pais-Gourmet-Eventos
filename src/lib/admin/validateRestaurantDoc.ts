@@ -64,6 +64,8 @@ export function validateRestaurantDoc(doc: unknown): doc is RestaurantDoc {
   if (d.hours !== null && typeof d.hours !== 'string') return false;
 
   if (!Array.isArray(d.menus) || d.menus.length === 0 || !d.menus.every(isValidMenu)) return false;
+  const menuPrices = (d.menus as Record<string, unknown>[]).map((m) => m.currentPrice);
+  if (new Set(menuPrices).size !== menuPrices.length) return false;
 
   const features = d.features as Record<string, unknown> | undefined;
   if (typeof features !== 'object' || features === null || features._type !== 'features') return false;

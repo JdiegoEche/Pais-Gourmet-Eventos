@@ -36,6 +36,18 @@ interface ReviewRow {
   ambianceRating?: number
   restaurantSlug?: string
   restaurantName?: string
+  menuKey?: string
+  menuPriceSnapshot?: number
+}
+
+interface MenuRankingRow {
+  menuKey: string
+  priceSnapshot: number | null
+  count: number
+  avgRating: number
+  avgFood: number | null
+  avgService: number | null
+  avgAmbiance: number | null
 }
 
 interface RankingRow {
@@ -46,6 +58,7 @@ interface RankingRow {
   avgFood: number | null
   avgService: number | null
   avgAmbiance: number | null
+  menus: MenuRankingRow[]
 }
 
 type Status =
@@ -64,24 +77,80 @@ function average(values: number[]): number {
 function buildRanking(reviews: ReviewRow[]): RankingRow[] {
   const bySlug = new Map<
     string,
-    {name: string; ratings: number[]; food: number[]; service: number[]; ambiance: number[]}
+    {
+      name: string
+      ratings: number[]
+      food: number[]
+      service: number[]
+      ambiance: number[]
+      menus: Map<
+        string,
+        {priceSnapshot: number | null; ratings: number[]; food: number[]; service: number[]; ambiance: number[]}
+      >
+    }
   >()
 
   for (const r of reviews) {
     if (!r.restaurantSlug) continue
     let entry = bySlug.get(r.restaurantSlug)
     if (!entry) {
-      entry = {name: r.restaurantName ?? r.restaurantSlug, ratings: [], food: [], service: [], ambiance: []}
+      entry = {
+        name: r.restaurantName ?? r.restaurantSlug,
+        ratings: [],
+        food: [],
+        service: [],
+        ambiance: [],
+        menus: new Map(),
+      }
       bySlug.set(r.restaurantSlug, entry)
     }
     entry.ratings.push(r.rating)
     if (r.foodRating) entry.food.push(r.foodRating)
     if (r.serviceRating) entry.service.push(r.serviceRating)
     if (r.ambianceRating) entry.ambiance.push(r.ambianceRating)
+
+    // Las reseñas sin menú (restaurantes de un solo menú, o reseñas de antes de esta
+    // funcionalidad) sólo alimentan el acumulador general de arriba: nunca crean un bucket
+    // por menú.
+    const menuKey = r.menuKey ?? ''
+    if (menuKey) {
+      let menuEntry = entry.menus.get(menuKey)
+      if (!menuEntry) {
+        menuEntry = {priceSnapshot: null, ratings: [], food: [], service: [], ambiance: []}
+        entry.menus.set(menuKey, menuEntry)
+      }
+      // La consulta GROQ ordena por createdAt asc, así que la última escritura gana: el
+      // precio que etiqueta el bucket siempre refleja el snapshot más reciente de ese menú.
+      if (r.menuPriceSnapshot != null) menuEntry.priceSnapshot = r.menuPriceSnapshot
+      menuEntry.ratings.push(r.rating)
+      if (r.foodRating) menuEntry.food.push(r.foodRating)
+      if (r.serviceRating) menuEntry.service.push(r.serviceRating)
+      if (r.ambianceRating) menuEntry.ambiance.push(r.ambianceRating)
+    }
   }
 
   const rows: RankingRow[] = []
   for (const [slug, entry] of bySlug) {
+    const menus: MenuRankingRow[] = []
+    for (const [menuKey, m] of entry.menus) {
+      menus.push({
+        menuKey,
+        priceSnapshot: m.priceSnapshot,
+        count: m.ratings.length,
+        avgRating: average(m.ratings),
+        avgFood: m.food.length ? average(m.food) : null,
+        avgService: m.service.length ? average(m.service) : null,
+        avgAmbiance: m.ambiance.length ? average(m.ambiance) : null,
+      })
+    }
+    // El bucket sin precio queda al final; menuKey sólo desempata para que el orden sea
+    // determinístico, no para distinguir precios repetidos (la unicidad de currentPrice por
+    // restaurante ya la garantiza el esquema).
+    menus.sort(
+      (a, b) =>
+        (a.priceSnapshot ?? Infinity) - (b.priceSnapshot ?? Infinity) || a.menuKey.localeCompare(b.menuKey),
+    )
+
     rows.push({
       slug,
       name: entry.name,
@@ -90,6 +159,7 @@ function buildRanking(reviews: ReviewRow[]): RankingRow[] {
       avgFood: entry.food.length ? average(entry.food) : null,
       avgService: entry.service.length ? average(entry.service) : null,
       avgAmbiance: entry.ambiance.length ? average(entry.ambiance) : null,
+      menus,
     })
   }
 
@@ -100,7 +170,22 @@ function fmt(value: number | null): string {
   return value == null ? '—' : value.toFixed(2)
 }
 
-const HEADERS = ['#', 'Restaurante', 'Promedio', 'Reseñas', 'Comida', 'Servicio', 'Ambiente']
+// Cuando el restaurante tiene un solo bucket de menú Y ese bucket explica el 100% de sus
+// reseñas (caso normal: restaurante de un solo menú, o de varios pero solo uno recibió
+// reseñas), la fila "Todos los menús" sería un duplicado exacto de esa única fila — mejor
+// mostrar directamente el valor del menú ahí en vez de repetirlo. Si hay 2+ buckets, o si el
+// conteo no cierra (reseñas "Sin menú" mezcladas), la fila general sigue aportando algo real.
+function onlyMenuRow(r: RankingRow): MenuRankingRow | null {
+  return r.menus.length === 1 && r.menus[0].count === r.count ? r.menus[0] : null
+}
+
+// toLocaleString, no Intl.NumberFormat({style: 'currency'}): ese formateador inyecta un
+// espacio non-breaking que corrompe las celdas del CSV.
+function menuLabel(price: number | null): string {
+  return price == null ? 'Sin menú' : `Menú de $${price.toLocaleString('es-CO')}`
+}
+
+const HEADERS = ['#', 'Restaurante', 'Menú', 'Promedio', 'Reseñas', 'Comida', 'Servicio', 'Ambiente']
 
 function RankingCalificacionesTool() {
   const client = useClient({apiVersion: API_VERSION})
@@ -110,8 +195,9 @@ function RankingCalificacionesTool() {
     setStatus({state: 'loading'})
     try {
       const reviews = await client.fetch<ReviewRow[]>(
-        `*[_type == "review"]{
+        `*[_type == "review"] | order(createdAt asc){
           rating, foodRating, serviceRating, ambianceRating,
+          menuKey, menuPriceSnapshot,
           "restaurantSlug": restaurant->slug.current,
           "restaurantName": restaurant->name
         }`,
@@ -127,9 +213,10 @@ function RankingCalificacionesTool() {
 
   const handleExport = () => {
     if (status.state !== 'success') return
-    const csv = toCsv(
-      ['posición', 'restaurante', 'promedio', 'reseñas', 'comida', 'servicio', 'ambiente'],
-      status.rows.map((r, i) => [
+    const rows: unknown[][] = []
+    status.rows.forEach((r, i) => {
+      const onlyMenu = onlyMenuRow(r)
+      rows.push([
         i + 1,
         r.name,
         r.avgRating.toFixed(2),
@@ -137,7 +224,28 @@ function RankingCalificacionesTool() {
         fmt(r.avgFood),
         fmt(r.avgService),
         fmt(r.avgAmbiance),
-      ]),
+        onlyMenu ? menuLabel(onlyMenu.priceSnapshot) : 'Todos los menús',
+        onlyMenu ? (onlyMenu.priceSnapshot ?? '') : '',
+      ])
+      if (!onlyMenu) {
+        for (const m of r.menus) {
+          rows.push([
+            i + 1,
+            r.name,
+            m.avgRating.toFixed(2),
+            m.count,
+            fmt(m.avgFood),
+            fmt(m.avgService),
+            fmt(m.avgAmbiance),
+            menuLabel(m.priceSnapshot),
+            m.priceSnapshot ?? '',
+          ])
+        }
+      }
+    })
+    const csv = toCsv(
+      ['posición', 'restaurante', 'promedio', 'reseñas', 'comida', 'servicio', 'ambiente', 'menú', 'precio'],
+      rows,
     )
     downloadCsv('ranking-calificaciones.csv', csv)
   }
@@ -151,7 +259,9 @@ function RankingCalificacionesTool() {
         <Text size={1} muted>
           Promedio de calificación por restaurante, de mayor a menor, con la cantidad de reseñas
           al lado. El promedio ordena la lista pero la decisión final del ganador queda en sus
-          manos.
+          manos. Si un restaurante tiene reseñas de más de un menú, se muestran las filas por
+          menú debajo de la fila general; si solo tiene un valor, se muestra directamente ese
+          valor sin repetirlo.
         </Text>
 
         <Flex align="center" gap={3}>
@@ -194,17 +304,37 @@ function RankingCalificacionesTool() {
                 </tr>
               </thead>
               <tbody>
-                {status.rows.map((r, i) => (
-                  <tr key={r.slug}>
-                    <td style={{padding: '8px 12px'}}>{i + 1}</td>
-                    <td style={{padding: '8px 12px'}}>{r.name}</td>
-                    <td style={{padding: '8px 12px'}}>{r.avgRating.toFixed(2)}</td>
-                    <td style={{padding: '8px 12px'}}>{r.count}</td>
-                    <td style={{padding: '8px 12px'}}>{fmt(r.avgFood)}</td>
-                    <td style={{padding: '8px 12px'}}>{fmt(r.avgService)}</td>
-                    <td style={{padding: '8px 12px'}}>{fmt(r.avgAmbiance)}</td>
-                  </tr>
-                ))}
+                {status.rows.flatMap((r, i) => {
+                  const onlyMenu = onlyMenuRow(r)
+                  return [
+                    <tr key={r.slug}>
+                      <td style={{padding: '8px 12px'}}>{i + 1}</td>
+                      <td style={{padding: '8px 12px'}}>{r.name}</td>
+                      <td style={{padding: '8px 12px'}}>
+                        {onlyMenu ? menuLabel(onlyMenu.priceSnapshot) : 'Todos los menús'}
+                      </td>
+                      <td style={{padding: '8px 12px'}}>{r.avgRating.toFixed(2)}</td>
+                      <td style={{padding: '8px 12px'}}>{r.count}</td>
+                      <td style={{padding: '8px 12px'}}>{fmt(r.avgFood)}</td>
+                      <td style={{padding: '8px 12px'}}>{fmt(r.avgService)}</td>
+                      <td style={{padding: '8px 12px'}}>{fmt(r.avgAmbiance)}</td>
+                    </tr>,
+                    ...(onlyMenu
+                      ? []
+                      : r.menus.map((m) => (
+                          <tr key={`${r.slug}::${m.menuKey ?? 'none'}`}>
+                            <td style={{padding: '8px 12px'}} />
+                            <td style={{padding: '8px 12px'}} />
+                            <td style={{padding: '8px 12px 8px 32px'}}>{menuLabel(m.priceSnapshot)}</td>
+                            <td style={{padding: '8px 12px'}}>{m.avgRating.toFixed(2)}</td>
+                            <td style={{padding: '8px 12px'}}>{m.count}</td>
+                            <td style={{padding: '8px 12px'}}>{fmt(m.avgFood)}</td>
+                            <td style={{padding: '8px 12px'}}>{fmt(m.avgService)}</td>
+                            <td style={{padding: '8px 12px'}}>{fmt(m.avgAmbiance)}</td>
+                          </tr>
+                        ))),
+                  ]
+                })}
               </tbody>
             </table>
           </Card>

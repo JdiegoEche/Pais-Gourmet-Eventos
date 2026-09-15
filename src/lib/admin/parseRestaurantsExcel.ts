@@ -286,6 +286,16 @@ export function parseRestaurantsExcel(buffer: ArrayBuffer, eventId: string): Par
       report.skipped.push({ name, reason: 'sin menu (obligatorio)' });
       continue;
     }
+    // Normalmente imposible por construcción (cada franja de precio es una columna distinta),
+    // salvo que la misma etiqueta de precio quede tipeada dos veces en la celda de categoría de
+    // este restaurante. validateRestaurantDoc.ts repite este mismo chequeo como último gate antes
+    // de escribir — acá se detecta primero para que el admin vea el restaurante puntual y el
+    // motivo en la vista previa, en vez de que toda la importación falle con un error genérico.
+    const menuPrices = menus.map((m) => m.currentPrice);
+    if (new Set(menuPrices).size !== menuPrices.length) {
+      report.skipped.push({ name, reason: 'dos o más menús con el mismo precio (revisá la columna de categoría)' });
+      continue;
+    }
 
     let deliveryZones: string[] = [];
     for (let col = DOMICILIO_START; col < DOMICILIO_END; col++) {

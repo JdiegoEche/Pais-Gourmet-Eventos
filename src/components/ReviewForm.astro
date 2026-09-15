@@ -1,12 +1,15 @@
 ---
 import StarRating from './StarRating.astro';
+import type { Menu } from '../types';
 
 interface Props {
   restaurantSlug: string;
+  menus?: Menu[];
 }
 
-const { restaurantSlug } = Astro.props;
+const { restaurantSlug, menus } = Astro.props;
 const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
+const showMenuSelect = (menus?.length ?? 0) > 1;
 ---
 
 <form class="review-form" data-review-form data-restaurant-slug={restaurantSlug}>
@@ -29,6 +32,17 @@ const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
     <input type="email" name="email" placeholder="Ej: juan@email.com" required />
   </label>
   <p class="review-form__privacy">Tu celular y email no se publican.</p>
+  {showMenuSelect && (
+    <label class="review-form__field">
+      <strong>Menú <span class="required-marker" aria-hidden="true">*</span></strong>
+      <select name="menuKey" required>
+        <option value="">Elegí un menú</option>
+        {menus?.map((menu) => (
+          <option value={menu._key}>Menú de ${menu.currentPrice.toLocaleString('es-CO')}</option>
+        ))}
+      </select>
+    </label>
+  )}
   <label class="review-form__field">
     <strong>Comentario <span class="required-marker" aria-hidden="true">*</span></strong>
     <textarea name="comment" placeholder="Contanos cómo fue tu experiencia" required maxlength="300"></textarea>
@@ -66,6 +80,7 @@ const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
     color: var(--color-text);
   }
   .review-form input,
+  .review-form select,
   .review-form textarea {
     padding: 0.6rem;
     border: 1px solid var(--color-border);
@@ -219,6 +234,7 @@ const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
             serviceRating: Number(formData.get('serviceRating')),
             ambianceRating: Number(formData.get('ambianceRating')),
             comment: formData.get('comment'),
+            menuKey: formData.get('menuKey') || undefined,
             turnstileToken: formData.get('cf-turnstile-response'),
           }),
         });

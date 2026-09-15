@@ -32,13 +32,46 @@ export class SanityReviewRepository implements ReviewRepository {
     // "slug.current == $slug" matchea tanto el draft como el publicado, y sin este filtro el
     // orden no está garantizado — puede terminar guardando una referencia a "drafts.xxx", que
     // el resto del sitio (perspectiva "published") nunca puede resolver.
-    const restaurantId = await client.fetch<string | null>(
-      `*[_type == "restaurant" && slug.current == $slug && !(_id in path("drafts.**"))][0]._id`,
+    // Además de _id, trae menus[]{_key,currentPrice}: esta misma consulta ya la hacíamos para
+    // resolver restaurantId, así que resolver menuPriceSnapshot acá no cuesta un round-trip extra.
+    const restaurantDoc = await client.fetch<{
+      _id: string;
+      menus: { _key: string; currentPrice: number }[];
+    } | null>(
+      `*[_type == "restaurant" && slug.current == $slug && !(_id in path("drafts.**"))][0]
+        { _id, "menus": coalesce(menus[]{_key, currentPrice}, []) }`,
       { slug: input.restaurantSlug }
     );
-    if (!restaurantId) {
+    if (!restaurantDoc) {
       throw new Error(`No existe el restaurante con slug "${input.restaurantSlug}"`);
     }
+    const restaurantId = restaurantDoc._id;
+
+    // El precio nunca se acepta del cliente (es forjable): se resuelve acá contra el menú
+    // vigente del restaurante. Si viene un menuKey que no matchea ningún menú (ej. se borró
+    // entre que el visitante vio el formulario y lo envió), se escribe ambos-o-ninguno: falla
+    // fuerte en vez de guardar una reseña con menuKey sin su snapshot.
+    let menuPriceSnapshot: number | undefined;
+    let resolvedMenuKey = input.menuKey;
+    if (input.menuKey !== undefined) {
+      const matchedMenu = restaurantDoc.menus.find((m) => m._key === input.menuKey);
+      if (!matchedMenu) {
+        throw new Error(
+          `El menú "${input.menuKey}" no existe en el restaurante "${input.restaurantSlug}"`
+        );
+      }
+      menuPriceSnapshot = matchedMenu.currentPrice;
+    } else if (restaurantDoc.menus.length === 1) {
+      // ReviewForm.astro oculta el <select> cuando el restaurante tiene un solo menú (no hay
+      // nada que elegir), así que el visitante nunca manda menuKey en ese caso. Eso no es lo
+      // mismo que "sin menú": hay exactamente un valor/precio posible, así que se atribuye acá
+      // como si lo hubiera elegido, para que la reseña siga contando en el desglose por menú
+      // del ranking en vez de caer solo en el acumulado general "Todos los menús".
+      const onlyMenu = restaurantDoc.menus[0];
+      resolvedMenuKey = onlyMenu._key;
+      menuPriceSnapshot = onlyMenu.currentPrice;
+    }
+
     // La reseña pública va a `production` SIN datos de contacto.
     const created = await client.create({
       _type: 'review',
@@ -51,6 +84,9 @@ export class SanityReviewRepository implements ReviewRepository {
       comment: input.comment,
       createdAt,
       replies: [],
+      ...(resolvedMenuKey !== undefined
+        ? { menuKey: resolvedMenuKey, menuPriceSnapshot }
+        : {}),
     });
 
     // El contacto va a un doc aparte en el dataset privado `leads`. Si esta escritura falla,
@@ -73,7 +109,14 @@ export class SanityReviewRepository implements ReviewRepository {
     }
 
     const { phone: _phone, email: _email, ...publicInput } = input;
-    return { ...publicInput, id: created._id, createdAt, replies: [] };
+    return {
+      ...publicInput,
+      id: created._id,
+      createdAt,
+      replies: [],
+      menuKey: resolvedMenuKey,
+      menuPriceSnapshot,
+    };
   }
 
   async addReply(reviewId: string, input: CreateReviewReplyInput): Promise<ReviewReply> {

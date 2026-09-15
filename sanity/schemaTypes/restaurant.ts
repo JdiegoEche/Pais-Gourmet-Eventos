@@ -89,6 +89,23 @@ export default defineType({
       title: 'Menús',
       type: 'array',
       of: [defineArrayMember({type: 'menu'})],
+      validation: (Rule) =>
+        Rule.custom<Array<{_key?: string; currentPrice?: number}>>((menus) => {
+          if (!Array.isArray(menus)) return true
+          const firstAt = new Map<number, number>()
+          const errors: {message: string; path: (string | number | {_key: string})[]}[] = []
+          menus.forEach((menu, i) => {
+            const price = menu?.currentPrice
+            if (typeof price !== 'number' || !Number.isFinite(price)) return // lo cubre currentPrice.required()
+            const prev = firstAt.get(price)
+            if (prev === undefined) return void firstAt.set(price, i)
+            errors.push({
+              message: `El precio $${price.toLocaleString('es-CO')} ya lo usa el menú #${prev + 1}. Cada menú debe tener un precio distinto.`,
+              path: menu?._key ? [{_key: menu._key}, 'currentPrice'] : [i, 'currentPrice'],
+            })
+          })
+          return errors.length ? errors : true
+        }),
     }),
     defineField({
       name: 'menuHighlights',

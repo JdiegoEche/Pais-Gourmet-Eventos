@@ -34,6 +34,7 @@ export interface MenuItem {
 }
 
 export interface Menu {
+  _key: string;
   name: string;
   currentPrice: number;
   previousPrice?: number;
@@ -105,6 +106,12 @@ export interface Review {
   comment: string;
   createdAt: string;
   replies: ReviewReply[];
+  // Menú puntual reseñado (Restaurant.menus[]._key). Ausente en reseñas anteriores a esta
+  // feature o de restaurantes con un solo menú.
+  menuKey?: string;
+  // Precio del menú al momento de la reseña, resuelto por el repositorio (nunca aceptado
+  // del cliente — ver CreateReviewInput). Solo presente cuando menuKey también lo está.
+  menuPriceSnapshot?: number;
 }
 
 export interface LeadSignup {
