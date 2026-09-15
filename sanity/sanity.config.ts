@@ -3,6 +3,7 @@ import {structureTool} from 'sanity/structure'
 import {visionTool} from '@sanity/vision'
 import {productionSchemaTypes, leadsSchemaTypes} from './schemaTypes'
 import {exportLeadsTool} from './tools/exportLeadsTool'
+import {rankingCalificacionesTool} from './tools/rankingCalificacionesTool'
 
 export default defineConfig([
   {
@@ -15,6 +16,7 @@ export default defineConfig([
     schema: {
       types: productionSchemaTypes,
     },
+    tools: [rankingCalificacionesTool],
   },
   {
     name: 'leads',
