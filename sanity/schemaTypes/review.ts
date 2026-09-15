@@ -60,6 +60,23 @@ export default defineType({
       initialValue: () => new Date().toISOString(),
     }),
     defineField({
+      name: 'menuKey',
+      title: 'Menú reseñado (key)',
+      description:
+        'Escrito por el formulario público / la API al crear la reseña. Editarlo a mano desincroniza el reporte de ranking por menú — no lo cambies desde Studio.',
+      type: 'string',
+      readOnly: true,
+    }),
+    defineField({
+      name: 'menuPriceSnapshot',
+      title: 'Precio del menú al reseñar',
+      description:
+        'Escrito por el formulario público / la API al crear la reseña (precio del menú en ese momento). Editarlo a mano desincroniza el reporte de ranking por menú — no lo cambies desde Studio.',
+      type: 'number',
+      readOnly: true,
+      validation: (Rule) => Rule.positive(),
+    }),
+    defineField({
       name: 'replies',
       title: 'Respuestas',
       type: 'array',

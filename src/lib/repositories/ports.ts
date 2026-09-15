@@ -10,7 +10,11 @@ export interface RestaurantRepository {
   getFeatured(featuredSlugs: string[]): Promise<Restaurant[]>;
 }
 
-export type CreateReviewInput = Omit<Review, 'id' | 'createdAt' | 'replies'>;
+// menuPriceSnapshot queda fuera del input: es un precio forjable si viene del cliente/API.
+// El repositorio lo resuelve él mismo contra el restaurante en vivo (ver SanityReviewRepository
+// y MockReviewRepository) a partir del menuKey, así el precio siempre es el que el restaurante
+// tenía publicado en el momento de la reseña, no lo que el request diga.
+export type CreateReviewInput = Omit<Review, 'id' | 'createdAt' | 'replies' | 'menuPriceSnapshot'>;
 export type CreateReviewReplyInput = Omit<ReviewReply, 'createdAt'>;
 
 export interface ReviewRepository {

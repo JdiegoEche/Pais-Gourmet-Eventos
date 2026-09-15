@@ -1,6 +1,6 @@
 import type { ReviewRepository, CreateReviewInput, CreateReviewReplyInput } from '../ports';
 import type { Review, ReviewReply } from '../../../types';
-import { mockReviewsSeed } from '../../mock/data';
+import { mockReviewsSeed, mockRestaurants } from '../../mock/data';
 
 // Reviews creadas en runtime durante esta sesión de dev. Viven en memoria del módulo: se pierden si el dev server se reinicia.
 // crypto.randomUUID() no puede correr en scope de módulo bajo el runtime de Cloudflare Workers
@@ -26,7 +26,38 @@ export class MockReviewRepository implements ReviewRepository {
   }
 
   async create(input: CreateReviewInput): Promise<Review> {
-    const review: Review = { ...input, id: crypto.randomUUID(), createdAt: new Date().toISOString(), replies: [] };
+    // Misma resolución que SanityReviewRepository: el precio nunca se acepta del cliente,
+    // se resuelve acá contra el menú vigente del restaurante mock. Ambos-o-ninguno: un
+    // menuKey que no matchea ningún menú falla fuerte en vez de guardarse a medias.
+    let menuPriceSnapshot: number | undefined;
+    let resolvedMenuKey = input.menuKey;
+    const restaurant = mockRestaurants.find((r) => r.slug === input.restaurantSlug);
+    if (input.menuKey !== undefined) {
+      const matchedMenu = restaurant?.menus.find((m) => m._key === input.menuKey);
+      if (!matchedMenu) {
+        throw new Error(
+          `El menú "${input.menuKey}" no existe en el restaurante "${input.restaurantSlug}"`
+        );
+      }
+      menuPriceSnapshot = matchedMenu.currentPrice;
+    } else if (restaurant?.menus.length === 1) {
+      // ReviewForm.astro oculta el <select> cuando el restaurante tiene un solo menú (no hay
+      // nada que elegir), así que el visitante nunca manda menuKey en ese caso. Eso no es lo
+      // mismo que "sin menú": hay exactamente un valor/precio posible, así que se atribuye acá
+      // como si lo hubiera elegido, para que la reseña siga contando en el desglose por menú
+      // del ranking en vez de caer solo en el acumulado general "Todos los menús".
+      const onlyMenu = restaurant.menus[0];
+      resolvedMenuKey = onlyMenu._key;
+      menuPriceSnapshot = onlyMenu.currentPrice;
+    }
+    const review: Review = {
+      ...input,
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+      replies: [],
+      menuKey: resolvedMenuKey,
+      menuPriceSnapshot,
+    };
     getSessionReviews().push(review);
     return review;
   }
